@@ -56,6 +56,7 @@ open class LuaMobDebugProcess(session: XDebugSession) : LuaDebugProcess(session)
     }
 
     override fun sessionInitialized() {
+        session.setPauseActionSupported(true)
         super.sessionInitialized()
         try {
             mobServer = MobServer(this)
