@@ -105,6 +105,8 @@
         BIT_RTRT = ">>"
         BIT_TILDE = "~"
         DOUBLE_DIV = "//"
+
+        DUMMY_GLOBAL = "cc.exports."
   ]
 
   hooks("localDef|assignStat|tableField") = [leftBinder="MY_LEFT_COMMENT_BINDER" rightBinder="MY_RIGHT_COMMENT_BINDER"]

@@ -96,6 +96,7 @@ class LuaParserDefinition : ParserDefinition {
                 LuaTypes.BLOCK_COMMENT,
                 LuaTypes.DOC_COMMENT,
                 LuaTypes.REGION,
+                LuaTypes.DUMMY_GLOBAL,
                 LuaTypes.ENDREGION
         )
         val STRINGS = TokenSet.create(LuaTypes.STRING)
