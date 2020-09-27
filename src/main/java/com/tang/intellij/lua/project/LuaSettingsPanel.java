@@ -58,9 +58,11 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     private JComboBox<LuaLanguageLevel> languageLevel;
     private JTextField requireFunctionNames;
     private JTextField tooLargerFileThreshold;
+    private JTextField reverseServer;
 
     public LuaSettingsPanel(LuaSettings settings) {
         this.settings = settings;
+        reverseServer.setText(settings.getReverseServer());
         constructorNames.setText(settings.getConstructorNamesString());
         strictDoc.setSelected(settings.isStrictDoc());
         smartCloseEnd.setSelected(settings.isSmartCloseEnd());
@@ -110,6 +112,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     public boolean isModified() {
         return !StringUtil.equals(settings.getConstructorNamesString(), constructorNames.getText()) ||
                 !StringUtil.equals(settings.getRequireLikeFunctionNamesString(), requireFunctionNames.getText()) ||
+                !StringUtil.equals(settings.getReverseServer(), reverseServer.getText()) ||
                 settings.getTooLargerFileThreshold() != getTooLargerFileThreshold() ||
                 settings.isStrictDoc() != strictDoc.isSelected() ||
                 settings.isSmartCloseEnd() != smartCloseEnd.isSelected() ||
@@ -127,6 +130,11 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
 
     @Override
     public void apply() {
+        String reverseServerText = reverseServer.getText().trim();
+        if (reverseServerText.equals("")) reverseServerText = "127.0.0.1";
+        settings.setReverseServer(reverseServerText);
+        reverseServer.setText(settings.getReverseServer());
+
         settings.setConstructorNamesString(constructorNames.getText());
         constructorNames.setText(settings.getConstructorNamesString());
         settings.setRequireLikeFunctionNamesString(requireFunctionNames.getText());
