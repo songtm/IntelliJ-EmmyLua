@@ -298,8 +298,10 @@ fun getName(indexExpr: LuaIndexExpr): String? {
 
     // var.name
     val id = indexExpr.id
-    if (id != null)
+    if (id != null) {
+        if (id.text == "new") return "ctor"
         return id.text
+    }
 
     // var['name']
     val idExpr = indexExpr.idExpr
