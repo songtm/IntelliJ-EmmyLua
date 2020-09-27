@@ -16,12 +16,14 @@
 
 package com.tang.intellij.lua.psi
 
+import com.intellij.AppTopics
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ex.ApplicationManagerEx
 import com.intellij.openapi.components.ApplicationComponent
 import com.intellij.openapi.fileTypes.FileTypeEvent
 import com.intellij.openapi.fileTypes.FileTypeListener
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.tang.intellij.lua.actions.SaveActionManager
 import com.tang.intellij.lua.lang.LuaFileType
 
 class LuaFileManager : ApplicationComponent, FileTypeListener {
@@ -39,6 +41,7 @@ class LuaFileManager : ApplicationComponent, FileTypeListener {
 
     override fun initComponent() {
         myMessageBus.connect().subscribe(FileTypeManager.TOPIC, this)
+        myMessageBus.connect().subscribe(AppTopics.FILE_DOCUMENT_SYNC, SaveActionManager())
     }
 
     override fun disposeComponent() {
