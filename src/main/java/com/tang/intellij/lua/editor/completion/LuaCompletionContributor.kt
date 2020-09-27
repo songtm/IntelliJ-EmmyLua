@@ -26,11 +26,13 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiNamedElement
 import com.intellij.psi.tree.TokenSet
 import com.intellij.util.ProcessingContext
+import com.intellij.util.Processor
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.lang.LuaLanguage
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.refactoring.LuaRefactoringUtil
+import com.tang.intellij.lua.stubs.index.LuaClassIndex
 
 /**
 
@@ -39,6 +41,18 @@ import com.tang.intellij.lua.refactoring.LuaRefactoringUtil
 class LuaCompletionContributor : CompletionContributor() {
     private var suggestWords = true
     init {
+        //tolua typeof(type)
+        extend(CompletionType.BASIC, IN_TYPE_OF_CALL, object : CompletionProvider<CompletionParameters>() {
+            override fun addCompletions(completionParameters: CompletionParameters, processingContext: ProcessingContext, completionResultSet: CompletionResultSet) {
+                val project = completionParameters.position.project
+                LuaClassIndex.processKeys(project, Processor{
+                    completionResultSet.addElement(LookupElementBuilder.create(it).withIcon(LuaIcons.CLASS))
+                    true
+                })
+                completionResultSet.stopHere()
+            }
+        })
+
         //可以override
         extend(CompletionType.BASIC, SHOW_OVERRIDE, OverrideCompletionProvider())
 
@@ -106,6 +120,13 @@ class LuaCompletionContributor : CompletionContributor() {
     }
 
     companion object {
+        private val IN_TYPE_OF_CALL = psiElement(LuaTypes.ID)
+                .withParent(
+                        psiElement(LuaNameExpr::class.java)
+                                .withParent(psiElement(LuaArgs::class.java).afterSibling(
+                                        psiElement().withName("typeof")
+                                ))
+                )
         private val IGNORE_SET = TokenSet.create(LuaTypes.STRING, LuaTypes.NUMBER, LuaTypes.CONCAT)
 
         private val SHOW_CLASS_FIELD = psiElement(LuaTypes.ID)
