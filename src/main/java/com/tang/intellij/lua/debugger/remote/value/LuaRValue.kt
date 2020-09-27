@@ -38,6 +38,9 @@ abstract class LuaRValue(name: String) : XNamedValue(name) {
 
     var parent: LuaRValue? = null
 
+    override fun canNavigateToSource(): Boolean {
+        return parent == null || parent.toString() == "_ENV"
+    }
     override fun computeSourcePosition(xNavigable: XNavigatable) {
         computeSourcePosition(xNavigable, name, session)
     }
@@ -60,27 +63,27 @@ abstract class LuaRValue(name: String) : XNamedValue(name) {
             value.parse(data, describe)
             return value
         }
+    }
 
-        fun computeSourcePosition(xNavigable: XNavigatable, name: String, session: XDebugSession) {
-            val currentPosition = session.currentPosition
-            if (currentPosition != null) {
-                val file = currentPosition.file
-                val project = session.project
-                val psiFile = PsiManager.getInstance(project).findFile(file)
-                val editor = FileEditorManager.getInstance(project).getSelectedEditor(file)
+    private fun computeSourcePosition(xNavigable: XNavigatable, name: String, session: XDebugSession) {
+        val currentPosition = session.currentPosition
+        if (currentPosition != null) {
+            val file = currentPosition.file
+            val project = session.project
+            val psiFile = PsiManager.getInstance(project).findFile(file)
+            val editor = FileEditorManager.getInstance(project).getSelectedEditor(file)
 
-                if (psiFile != null && editor is TextEditor) {
-                    val document = editor.editor.document
-                    val lineEndOffset = document.getLineStartOffset(currentPosition.line)
-                    val element = psiFile.findElementAt(lineEndOffset) ?: return
-                    LuaDeclarationTree.get(psiFile).walkUpLocal(element) {
-                        if (name == it.name) {
-                            val position = XSourcePositionImpl.createByElement(it.psi)
-                            xNavigable.setSourcePosition(position)
-                            return@walkUpLocal false
-                        }
-                        true
+            if (psiFile != null && editor is TextEditor) {
+                val document = editor.editor.document
+                val lineEndOffset = document.getLineStartOffset(currentPosition.line)
+                val element = psiFile.findElementAt(lineEndOffset) ?: return
+                LuaDeclarationTree.get(psiFile).walkUpLocal(element) {
+                    if (name == it.name) {
+                        val position = XSourcePositionImpl.createByElement(it.psi)
+                        xNavigable.setSourcePosition(position)
+                        return@walkUpLocal false
                     }
+                    true
                 }
             }
         }

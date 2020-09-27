@@ -19,18 +19,41 @@ package com.tang.intellij.lua.debugger.remote.commands
 import com.tang.intellij.lua.debugger.remote.MobClient
 import com.tang.intellij.lua.lexer.LuaLexerAdapter
 import com.tang.intellij.lua.psi.LuaTypes
+import java.io.IOException
+import java.nio.ByteBuffer
 
 /**
  *
  * Created by tangzx on 2016/12/31.
  */
-open class DefaultCommand(private val commandline: String, private val requireRespLines: Int = 1) : DebugCommand() {
+open class DefaultCommand @JvmOverloads constructor(val commandline: String, private val requireRespLines: Int = 1) : DebugCommand() {
+    companion object {
+        val errorByteBuffer = ByteBuffer.allocate( 1024 * 1024)!!
+    }
     internal var handleLines: Int = 0
 
-    private var lineBuffer = StringBuffer(1024 * 32)
+    var lineBuffer = StringBuffer(1024 * 32)
+    var errorMsgHaveLen: Int = 0
 
+    @Throws(IOException::class)
     override fun write(writer: MobClient) {
         writer.write(commandline)
+    }
+
+    fun handleError(data: String, errorMsgLen: Int, msgCompelte: (m: String) -> Boolean):Int {
+        val byteData = data.toByteArray()
+        return if (errorMsgHaveLen + byteData.size >= errorMsgLen) {
+            val offset = errorMsgLen - errorMsgHaveLen
+            errorByteBuffer.put(byteData, 0, offset)
+            msgCompelte(String(errorByteBuffer.array(), 0, errorMsgLen))
+            errorMsgHaveLen = 0
+            errorByteBuffer.clear()
+            offset
+        }else {
+            errorByteBuffer.put(byteData)
+            errorMsgHaveLen +=byteData.size
+            byteData.size
+        }
     }
 
     override fun handle(data: String): Int {

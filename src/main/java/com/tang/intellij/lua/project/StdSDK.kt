@@ -16,11 +16,14 @@
 
 package com.tang.intellij.lua.project
 
+import com.intellij.AppTopics
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ApplicationComponent
+import com.intellij.openapi.fileEditor.FileDocumentManagerListener
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.projectRoots.impl.ProjectJdkImpl
+import com.tang.intellij.lua.actions.SaveActionManager
 
 /**
  *
@@ -30,6 +33,10 @@ class StdSDK : ApplicationComponent {
 
     override fun initComponent() {
         sdk
+
+        val bus = ApplicationManager.getApplication().messageBus
+        val connection = bus.connect()
+        connection.subscribe<FileDocumentManagerListener>(AppTopics.FILE_DOCUMENT_SYNC, SaveActionManager())
     }
 
     override fun disposeComponent() {

@@ -17,9 +17,11 @@
 package com.tang.intellij.lua.debugger.remote.commands
 
 import com.intellij.xdebugger.frame.XStackFrame
+import com.intellij.xdebugger.impl.XSourcePositionImpl
 import com.tang.intellij.lua.debugger.LuaExecutionStack
 import com.tang.intellij.lua.debugger.remote.LuaMobStackFrame
 import com.tang.intellij.lua.debugger.remote.value.LuaRValue
+import com.tang.intellij.lua.psi.LuaFileUtil
 import org.luaj.vm2.LuaTable
 import org.luaj.vm2.lib.jse.JsePlatform
 import java.util.*
@@ -40,11 +42,12 @@ class GetStackCommand : DefaultCommand("STACK --{maxlevel=0}", 1) {
 
     override fun handle(data: String): Int {
         if (hasError) {
-            hasError = false
-            val error = data.substring(0, errorDataLen)
-            debugProcess.error(error)
-            debugProcess.runCommand(DefaultCommand("RUN", 0))
-            return errorDataLen
+            return super.handleError(data, errorMsgHaveLen) { msg ->
+                hasError = false
+                debugProcess.error(msg)
+                debugProcess.runCommand(DefaultCommand("RUN", 0))
+                true
+            }
         }
         return super.handle(data)
     }
@@ -63,7 +66,7 @@ class GetStackCommand : DefaultCommand("STACK --{maxlevel=0}", 1) {
         if (data.startsWith("200 OK")) {
             val stackCode = data.substring(6)
             val standardGlobals = JsePlatform.standardGlobals()
-            val strippedCode = limitStringSize(stackCode)
+            val strippedCode = stackCode//limitStringSize(stackCode)//数据量大时卡顿几秒
             val code = standardGlobals.load(strippedCode)
             val function = code.checkfunction()
             val value = function.call()
@@ -76,7 +79,14 @@ class GetStackCommand : DefaultCommand("STACK --{maxlevel=0}", 1) {
                 val funcName = stackInfo.get(1)
                 val fileName = stackInfo.get(2)
                 val line = stackInfo.get(4)
-                val position = debugProcess.findSourcePosition(fileName.toString(), line.toint())
+
+                var position: XSourcePositionImpl? = null
+                val virtualFile = LuaFileUtil.findFile(debugProcess.session.project, fileName.toString())
+                if (virtualFile != null) {
+                    val nLine = line.toint()
+                    position = XSourcePositionImpl.create(virtualFile, nLine - 1)
+                }
+
                 var functionName = funcName.toString()
                 if (funcName.isnil())
                     functionName = "main"

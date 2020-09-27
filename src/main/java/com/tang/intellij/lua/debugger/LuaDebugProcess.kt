@@ -40,7 +40,7 @@ import com.intellij.xdebugger.impl.actions.XDebuggerActions
  * Created by tangzx on 2017/5/1.
  */
 abstract class LuaDebugProcess protected constructor(session: XDebugSession) : XDebugProcess(session), DebugLogger {
-
+    protected var beSingleFrame = false //只有最后一帧,lua "OUT"不能使用
     override fun sessionInitialized() {
         super.sessionInitialized()
         session.consoleView.addMessageFilter(LuaTracebackFilter(session.project))
@@ -131,6 +131,8 @@ abstract class LuaDebugProcess protected constructor(session: XDebugSession) : X
 
     fun setStack(stack: LuaExecutionStack) {
         val frames = stack.stackFrames
+        beSingleFrame = (frames.count() == 1)
+        stack.project = session.project
         for (topFrame in frames) {
             val sourcePosition = topFrame.sourcePosition
             if (sourcePosition != null) {

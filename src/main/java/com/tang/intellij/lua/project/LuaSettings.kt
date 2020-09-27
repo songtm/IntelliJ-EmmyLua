@@ -31,6 +31,8 @@ import java.nio.charset.Charset
  */
 @State(name = "LuaSettings", storages = [(Storage("emmy.xml"))])
 class LuaSettings : PersistentStateComponent<LuaSettings> {
+    var reverseServer:String = "127.0.0.1"
+
     //自定义require函数，参考constructorNames
     var requireLikeFunctionNames: Array<String> = arrayOf("require")
 

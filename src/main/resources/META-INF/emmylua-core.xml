@@ -342,6 +342,17 @@
             <add-to-group group-id="NewGroup" anchor="after" relative-to-action="lua.newFile"/>
         </action>
 
+        <action id="lua.liveCoding" text="Lua Live Coding"
+                icon="/icons/live.png"
+                class="com.tang.intellij.lua.actions.LuaLiveCodingAction">
+            <add-to-group group-id="ToolbarRunGroup" anchor="before" relative-to-action="RunConfiguration"/>
+        </action>
+        <action id="lua.openActiveUIFile" text="Open Game Active UI Script"
+                icon="/icons/lua.png"
+                class="com.tang.intellij.lua.actions.LuaOpenActiveUIFile">
+            <add-to-group group-id="ToolbarRunGroup" anchor="before" relative-to-action="lua.liveCoding"/>
+        </action>
+
         <action id="lua.LuaCheck"
                 text="Run LuaCheck"
                 popup="true"

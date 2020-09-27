@@ -29,7 +29,6 @@ import com.intellij.util.SmartList
 import com.tang.intellij.lua.ext.ILuaFileResolver
 import com.tang.intellij.lua.project.LuaSourceRootManager
 import java.io.File
-import java.util.*
 
 /**
  *
@@ -100,11 +99,15 @@ object LuaFileUtil {
         return ILuaFileResolver.findLuaFile(project, fixedShortUrl, extensions)
     }
 
-    fun getShortPath(project: Project, file: VirtualFile): String {
-        return VfsUtil.urlToPath(getShortUrl(project, file))
+    fun getShortestPath(project: Project?, file: VirtualFile?): String? {
+        return VfsUtil.urlToPath(getShortUrl(project!!, file!!, true))
     }
 
-    private fun getShortUrl(project: Project, file: VirtualFile): String {
+    fun getShortPath(project: Project, file: VirtualFile): String {
+        return VfsUtil.urlToPath(getShortUrl(project, file, false))
+    }
+
+    private fun getShortUrl(project: Project, file: VirtualFile, getShortest:Boolean): String {
         val fileFullUrl = file.url
         var fileShortUrl = fileFullUrl
 
@@ -112,8 +115,17 @@ object LuaFileUtil {
         for (root in roots) {
             val sourceRootUrl = root.url
             if (fileFullUrl.startsWith(sourceRootUrl)) {
-                fileShortUrl = fileFullUrl.substring(sourceRootUrl.length + 1)
-                break
+                val url = fileFullUrl.substring(sourceRootUrl.length + 1)
+                if (getShortest)
+                {
+                    if (url.length < fileShortUrl.length)
+                        fileShortUrl = url
+                }
+                else
+                {
+                    fileShortUrl = url
+                    break
+                }
             }
         }
         return fileShortUrl

@@ -28,6 +28,8 @@ import javax.swing.*;
  * Email:love.tangzx@qq.com
  */
 public class LuaIcons {
+    public static final Icon LIVE_TIP = IconLoader.getIcon("/icons/live_tip.png");
+    public static final Icon LINK_TIP = IconLoader.getIcon("/icons/link.png");
     public static final Icon FILE = IconLoader.getIcon("/icons/lua.png");
     public static final Icon CSHARP = IconLoader.getIcon("/icons/csharp.png");
     public static final Icon CPP = IconLoader.getIcon("/icons/cpp.png");

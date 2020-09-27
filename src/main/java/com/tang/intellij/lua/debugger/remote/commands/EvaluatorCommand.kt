@@ -23,7 +23,7 @@ import java.util.regex.Pattern
  *
  * Created by tangzx on 2017/1/1.
  */
-class EvaluatorCommand(expr: String, stackLevel: Int, private val callback: Callback) : DefaultCommand("EXEC $expr --{maxlevel=1, stack=$stackLevel}", 2) {
+class EvaluatorCommand(expr: String, stackIndex: String, private val callback: Callback) : DefaultCommand("EXEC $expr --{maxlevel=1, stack=$stackIndex}", 2) {
     private var hasError2Process: Boolean = false
     private var dataLen: Int = 0
     private val dataBuffer = StringBuffer()
@@ -53,12 +53,14 @@ class EvaluatorCommand(expr: String, stackLevel: Int, private val callback: Call
 
     override fun handle(data: String): Int {
         if (hasError2Process && dataLen > 0) {
-            hasError2Process = false
-            handleLines++
-            val error = data.substring(0, dataLen)
-            debugProcess.error(error)
-            onResult("do local _={\"\\\"401_error_happened\\\"\"};return _;end")
-            return dataLen
+            return super.handleError(data, dataLen) { msg ->
+                hasError2Process = false
+                handleLines++
+                debugProcess.error(msg)
+                onResult("do local _={\"\\\"401_error_happened\\\"\"};return _;end")//todo
+                true
+            }
+
         }
         if (dataLen != 0) {
             val index = data.indexOf("return _;end")

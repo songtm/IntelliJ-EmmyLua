@@ -16,6 +16,8 @@
 
 package com.tang.intellij.lua.debugger
 
+import com.intellij.openapi.project.Project
+import com.intellij.xdebugger.XDebuggerManager
 import com.intellij.xdebugger.frame.XExecutionStack
 import com.intellij.xdebugger.frame.XStackFrame
 import com.intellij.xdebugger.impl.frame.XStackFrameContainerEx
@@ -25,6 +27,7 @@ import com.intellij.xdebugger.impl.frame.XStackFrameContainerEx
  * Created by tangzx on 2016/12/31.
  */
 class LuaExecutionStack(private val stackFrameList: List<XStackFrame>) : XExecutionStack("LuaStack") {
+    var project: Project? = null
     private var _topFrame: XStackFrame? = null
 
     val stackFrames: Array<XStackFrame>
@@ -43,6 +46,14 @@ class LuaExecutionStack(private val stackFrameList: List<XStackFrame>) : XExecut
 
     override fun computeStackFrames(i: Int, xStackFrameContainer: XExecutionStack.XStackFrameContainer) {
         val stackFrameContainerEx = xStackFrameContainer as XStackFrameContainerEx
-        stackFrameContainerEx.addStackFrames(stackFrameList, topFrame, true)
+        var selFrame = topFrame
+        if (project != null) {
+            val manager = XDebuggerManager.getInstance(project!!)
+            if (manager.currentSession != null && manager.currentSession!!.currentStackFrame != null) {
+                selFrame = manager.currentSession!!.currentStackFrame
+            }
+        }
+        stackFrameContainerEx.addStackFrames(stackFrameList, selFrame, true)
     }
+
 }

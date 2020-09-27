@@ -62,11 +62,14 @@ class MobClient(private val socketChannel: SocketChannel, private val listener: 
                     if (currentCommandWaitForResp == null) {
                         command = commands.poll()
                         command.debugProcess = listener.process
+//                        listener.println("----send " + (command as DefaultCommand).commandline, LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
+                        if (command.getRequireRespLines() > 0)
+                            currentCommandWaitForResp = command
+//                        Thread.sleep(10)
                         command.write(this)
                         streamWriter!!.write("\n")
                         streamWriter!!.flush()
-                        if (command.getRequireRespLines() > 0)
-                            currentCommandWaitForResp = command
+
                     }
                 }
                 Thread.sleep(5)
@@ -76,7 +79,7 @@ class MobClient(private val socketChannel: SocketChannel, private val listener: 
         } catch (e: Exception) {
             e.message?.let { listener.error(it) }
         } finally {
-            onClosed()
+            listener.println("Disconnected.", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
         }
     }
 
@@ -87,29 +90,45 @@ class MobClient(private val socketChannel: SocketChannel, private val listener: 
             while (!isStopped) {
                 readSize = socketChannel.read(bf)
                 if (readSize > 0) {
+//                    println("+++rawrecv:" + String(bf.array(), 0, readSize) + "+++")
                     var begin = 0
-                    for (i in 1..readSize + 1) {
-                        if (bf[i - 1].toInt() == '\n'.toInt()) {
-                            onResp(String(bf.array(), begin, i))
-                            begin = i
+                    for (i in 0..readSize - 1) {
+                        if (bf[i].toInt() == '\n'.toInt()) {
+                            onResp(String(bf.array(), begin, i - begin + 1))
+                            begin = i + 1
                         }
                     }
                     if (begin < readSize) {
-                        onResp(String(bf.array(), begin, readSize))
+                        onResp(String(bf.array(), begin, readSize - begin))
                     }
                     bf.clear()
                 }
+                if (readSize < 0) {
+                    listener.println("recv size 0, close socket", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
+                    onSocketClosed() //client closed socket(tocheck!)
+                }
             }
         } catch (e: IOException) {
+            listener.error("recv IOException, close socket")
             onSocketClosed()
         } catch (e: Exception) {
+            listener.error("recv exception "+e.message)
             e.message?.let { listener.error(it) }
         }
     }
 
-    private fun onResp(data: String) {
+    private fun onResp(data: String) {//这里上层已经分发为单条消息
+//        if (currentCommandWaitForResp != null && currentCommandWaitForResp as DefaultCommand != null)
+//        {
+//            listener.println("-----recv:" + data + " waitcmd " + (currentCommandWaitForResp as DefaultCommand).commandline+"--------\n", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
+//        }
+//        else
+//        {
+//            listener.println("-----recv:" + data + " waitcmd " + currentCommandWaitForResp+"--------\n", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
+//        }
+
         val cmd = currentCommandWaitForResp
-        if (cmd != null) {
+        if (cmd != null && !data.startsWith("202 Paused ")) { //mobdebug主动推送的消息
             val eat = cmd.handle(data)
             if (eat > 0) {
                 if (cmd.isFinished())
@@ -117,7 +136,7 @@ class MobClient(private val socketChannel: SocketChannel, private val listener: 
                 return
             }
         }
-
+        //println("check code");
         val pattern = Pattern.compile("(\\d+) (\\w+)( (.+))?")
         val matcher = pattern.matcher(data)
         if (matcher.find()) {
@@ -140,27 +159,21 @@ class MobClient(private val socketChannel: SocketChannel, private val listener: 
 
     fun stop() {
         try {
-            streamWriter?.write("done\n")
+            streamWriter?.write("DONE\n")
+            streamWriter?.flush()
         } catch (ignored: IOException) {
         }
+
+        isStopped = true
         currentCommandWaitForResp = null
         try {
             socket.close()
         } catch (ignored: Exception) {
         }
-        onClosed()
-        isStopped = true
     }
 
-    private fun onClosed() {
-        if (!isStopped) {
-            isStopped = true
-            listener.println("Disconnected.", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
-        }
-    }
-
-    fun sendAddBreakpoint(file: String, line: Int) {
-        addCommand("SETB $file $line")
+    fun sendAddBreakpoint(file: String, line: Int, condition: String) {
+        addCommand("SETB $file $line $condition")
     }
 
     fun sendRemoveBreakpoint(file: String, line: Int) {

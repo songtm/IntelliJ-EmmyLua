@@ -54,12 +54,16 @@ class MobServer(private val listener: MobServerListener) : Runnable {
     override fun run() {
         while (!isStopped) {
             try {
-                val accept = server?.accept() ?: break
-                client?.stop()
-                listener.println("Connected.", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
-                val newClient = MobClient(accept, listener)
-                client = newClient
-                listener.onConnect(newClient)
+                val accept = server!!.accept()
+                if (client != null) {
+                    try {
+                        accept.close()
+                    } catch (e: Exception) {}
+                } else {
+                    listener.println("Connected.", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
+                    client = MobClient(accept, listener)
+                    listener.onConnect(client!!)
+                }
             } catch (e: IOException) {
                 break
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017. tangzx(love.tangzx@qq.com)
+ * Copyright (c) 2017. tangzx(love .tangzx@qq.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,22 +17,28 @@
 package com.tang.intellij.lua.debugger.remote
 
 import com.intellij.execution.ui.ConsoleViewContentType
-import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.util.Processor
 import com.intellij.xdebugger.XDebugSession
 import com.intellij.xdebugger.XSourcePosition
+import com.intellij.xdebugger.breakpoints.SuspendPolicy
 import com.intellij.xdebugger.breakpoints.XLineBreakpoint
 import com.intellij.xdebugger.evaluation.XDebuggerEditorsProvider
 import com.intellij.xdebugger.frame.XSuspendContext
-import com.intellij.xdebugger.impl.XSourcePositionImpl
+import com.tang.intellij.lua.actions.LuaLiveCodingAction
 import com.tang.intellij.lua.debugger.IRemoteConfiguration
 import com.tang.intellij.lua.debugger.LogConsoleType
 import com.tang.intellij.lua.debugger.LuaDebugProcess
 import com.tang.intellij.lua.debugger.LuaDebuggerEditorsProvider
 import com.tang.intellij.lua.debugger.remote.commands.DebugCommand
 import com.tang.intellij.lua.debugger.remote.commands.GetStackCommand
+import com.tang.intellij.lua.lang.LuaIcons
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.LuaFileUtil
+import java.io.IOException
 import java.net.BindException
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 
 /**
 
@@ -44,7 +50,6 @@ open class LuaMobDebugProcess(session: XDebugSession) : LuaDebugProcess(session)
     private val editorsProvider: LuaDebuggerEditorsProvider = LuaDebuggerEditorsProvider()
     private var mobServer: MobServer? = null
     private var mobClient: MobClient? = null
-    private var baseDir: String? = null
 
     override fun getEditorsProvider(): XDebuggerEditorsProvider {
         return editorsProvider
@@ -57,7 +62,16 @@ open class LuaMobDebugProcess(session: XDebugSession) : LuaDebugProcess(session)
             mobServer?.start(runProfile.port)
             println("Start mobdebug server at port:${runProfile.port}", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
             println("Waiting for process connection...", LogConsoleType.NORMAL, ConsoleViewContentType.SYSTEM_OUTPUT)
-        } catch (e:BindException) {
+
+            val inetAddress = InetAddress.getLocalHost()
+//            println("IP Address:- " + inetAddress.hostAddress)
+            val clientSocket = DatagramSocket()
+            val sendData = ("DEBUG_START|" + inetAddress.hostAddress).toByteArray()
+            val sendPacket = DatagramPacket(sendData, sendData.size, InetAddress.getByName(LuaSettings.instance.reverseServer), 8090)
+            clientSocket.send(sendPacket)
+            clientSocket.close()
+
+        } catch (e: BindException) {
             error("Failed start mobdebug server at port:${runProfile.port}\n${e.message}")
         } catch (e: Exception) {
             e.message?.let { error(it) }
@@ -73,7 +87,8 @@ open class LuaMobDebugProcess(session: XDebugSession) : LuaDebugProcess(session)
     }
 
     override fun startPausing() {
-        mobClient?.addCommand("SUSPEND")
+        mobClient?.addCommand("SUSPEND", 0)
+//        mobClient?.addCommand((GetStackCommand()))
     }
 
     override fun startStepOver(context: XSuspendContext?) {
@@ -85,30 +100,38 @@ open class LuaMobDebugProcess(session: XDebugSession) : LuaDebugProcess(session)
     }
 
     override fun startStepOut(context: XSuspendContext?) {
-        mobClient?.addCommand("OUT")
+        if (!beSingleFrame)
+            mobClient?.addCommand("OUT")
+        else
+            mobClient?.addCommand("RUN")
     }
 
-    private fun sendBreakpoint(sourcePosition: XSourcePosition) {
+    private fun sendBreakpoint(client: MobClient, sourcePosition: XSourcePosition, condition: String) {
+        val project = session.project
         val file = sourcePosition.file
-        val fileShortUrl: String? = getShortPath(file)
+        val fileShortUrl: String? = LuaFileUtil.getShortestPath(project, file)
         if (fileShortUrl != null) {
-            LuaFileUtil.getAllAvailablePathsForMob(fileShortUrl, file).forEach{ url ->
-                mobClient?.sendAddBreakpoint(url, sourcePosition.line + 1)
+            LuaFileUtil.getAllAvailablePathsForMob(fileShortUrl, file).forEach { url ->
+                client.sendAddBreakpoint(url, sourcePosition.line + 1, condition)
             }
         }
     }
 
     override fun registerBreakpoint(sourcePosition: XSourcePosition, breakpoint: XLineBreakpoint<*>) {
         super.registerBreakpoint(sourcePosition, breakpoint)
-        sendBreakpoint(sourcePosition)
+        breakpoint.suspendPolicy = SuspendPolicy.ALL
+        if (mobClient != null) sendBreakpoint(mobClient!!, sourcePosition, breakpoint?.conditionExpression?.expression
+                ?: "")
     }
 
     override fun unregisterBreakpoint(sourcePosition: XSourcePosition, breakpoint: XLineBreakpoint<*>) {
         super.unregisterBreakpoint(sourcePosition, breakpoint)
-        val file = sourcePosition.file
-        val fileShortUrl = getShortPath(file)
-        LuaFileUtil.getAllAvailablePathsForMob(fileShortUrl, file).forEach{ url ->
-            mobClient?.sendRemoveBreakpoint(url, sourcePosition.line + 1)
+        if (mobClient != null) {
+            val file = sourcePosition.file
+            val fileShortUrl = LuaFileUtil.getShortestPath(session.project, file)
+            LuaFileUtil.getAllAvailablePathsForMob(fileShortUrl, file).forEach { url ->
+                mobClient!!.sendRemoveBreakpoint(url, sourcePosition.line + 1)
+            }
         }
     }
 
@@ -121,64 +144,23 @@ open class LuaMobDebugProcess(session: XDebugSession) : LuaDebugProcess(session)
     override fun onDisconnect(client: MobClient) {
         mobServer?.restart()
         mobClient = null
-        baseDir = null
     }
 
     override fun onConnect(client: MobClient) {
         mobClient = client
         client.addCommand("DELB * 0")
-        client.addCommand((GetStackCommand()))
-        sendAllBreakpoints()
-    }
-
-    fun findSourcePosition(chunkName: String, line: Int): XSourcePosition? {
-        var position: XSourcePositionImpl? = null
-        val virtualFile = LuaFileUtil.findFile(session.project, chunkName)
-        if (virtualFile != null) {
-            recognizeBaseDir(virtualFile, chunkName)
-            position = XSourcePositionImpl.create(virtualFile, line - 1)
-        }
-        return position
-    }
-
-    private fun recognizeBaseDir(file: VirtualFile, chunkName: String) {
-        val pathParts = file.canonicalPath?.split(Regex("[\\/]"))?.reversed() ?: return
-        val chunkParts = chunkName.split(Regex("[\\/]")).reversed()
-        if (pathParts.size < chunkParts.size)
-            return
-        var neq = 1
-        for (i in 1 until chunkParts.size) {
-            val chunkPart = chunkParts[i]
-            val pathPart = pathParts[i]
-            if (chunkPart.toLowerCase() != pathPart.toLowerCase()) {
-                break
-            }
-            neq = i
-        }
-        val dir = pathParts.takeLast(pathParts.size - neq).reversed().joinToString("/")
-        val myBaseDir = this.baseDir
-        if (myBaseDir == null || myBaseDir.length > dir.length) {
-            this.baseDir = dir
-            print("Base dir: $dir\n", LogConsoleType.EMMY, ConsoleViewContentType.SYSTEM_OUTPUT)
-            sendAllBreakpoints()
-        }
-    }
-
-    private fun sendAllBreakpoints() {
-        mobClient?.addCommand("DELB * 0")
         processBreakpoint(Processor { bp ->
-            bp.sourcePosition?.let { sendBreakpoint(it) }
+            bp.suspendPolicy = SuspendPolicy.ALL
+            if (bp.isEnabled && !process.session.areBreakpointsMuted()) {
+                bp.sourcePosition?.let { sendBreakpoint(client, it, bp.conditionExpression?.expression ?: "") }
+            }
             true
         })
-    }
-
-    private fun getShortPath(file: VirtualFile): String {
-        val myBaseDir = this.baseDir
-        val path = file.canonicalPath
-        if (myBaseDir != null && path != null && path.toLowerCase().startsWith(myBaseDir.toLowerCase())) {
-            return path.substring(myBaseDir.length + 1)
-        }
-        return LuaFileUtil.getShortPath(session.project, file)
+        if (false) //LuaSettings.instance.mobdebugConnectPause //todo
+            client.addCommand((GetStackCommand()))
+        else
+            client.addCommand("RUN")
+        LuaLiveCodingAction.showBalloon(session.project, LuaIcons.LINK_TIP)
     }
 
     override val process: LuaMobDebugProcess
