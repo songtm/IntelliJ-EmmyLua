@@ -60,9 +60,10 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
 
     }
 
-    operator fun invoke(project: Project, editor: Editor, expr: LuaExpr) {
+    operator fun invoke(project: Project, editor: Editor, expr: LuaExpr, varName: String) {
         val occurrences = getOccurrences(expr)
         val operation = IntroduceOperation(expr, project, editor, expr.containingFile, occurrences)
+        operation.name = varName
         OccurrencesChooser.simpleChooser<PsiElement>(editor).showChooser(expr, occurrences, object : Pass<OccurrencesChooser.ReplaceChoice>() {
             override fun pass(choice: OccurrencesChooser.ReplaceChoice) {
                 operation.isReplaceAll = choice == OccurrencesChooser.ReplaceChoice.ALL
@@ -107,7 +108,7 @@ class LuaIntroduceVarHandler : RefactoringActionHandler {
         var commonParent = PsiTreeUtil.findCommonParent(operation.occurrences)
         if (commonParent != null) {
             var element = operation.element
-            var localDef = LuaElementFactory.createWith(operation.project, "local var = " + element.text)
+            var localDef = LuaElementFactory.createWith(operation.project, "local " + operation.name + " = " + element.text)
             val inline = isInline(commonParent, operation)
             if (inline) {
                 if (element is LuaCallExpr && element.parent is LuaExprStat)

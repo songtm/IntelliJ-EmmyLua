@@ -23,6 +23,9 @@ import com.tang.intellij.lua.psi.LuaExpr;
 import com.tang.intellij.lua.refactoring.rename.LuaIntroduceVarHandler;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static com.tang.intellij.lua.codeInsight.postfix.LuaPostfixUtils.selectorAllExpressionsWithCurrentOffset;
 
 /**
@@ -38,6 +41,16 @@ public class LuaLocalPostfixTemplate extends PostfixTemplateWithExpressionSelect
     @Override
     protected void expandForChooseExpression(@NotNull PsiElement psiElement, @NotNull Editor editor) {
         LuaIntroduceVarHandler handler = new LuaIntroduceVarHandler();
-        handler.invoke(psiElement.getProject(), editor, (LuaExpr) psiElement);
+        String text = psiElement.getNode().getText();
+        String varName = "var";
+        if (text.length() > 7 && text.substring(0, 7).equals("require") ) {
+            String pattern = "require\\(.*\\.(\\w+)";//require("xxx.xx.xx")
+            Pattern r = Pattern.compile(pattern);
+            Matcher m = r.matcher(text);
+            if (m.find()) {
+                varName = m.group(1);
+            }
+        }
+        handler.invoke(psiElement.getProject(), editor, (LuaExpr) psiElement, varName);
     }
 }
