@@ -21,6 +21,7 @@ import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
+import com.tang.intellij.lua.actions.KeyboardState
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.hasVarargs
@@ -38,9 +39,12 @@ open class SignatureInsertHandler(val sig: IFunSignature, private val isColonSty
     }
 
     override fun handleInsert(insertionContext: InsertionContext, lookupElement: LookupElement) {
-        super.handleInsert(insertionContext, lookupElement)
-        if (replaceDot)
-            insertionContext.document.replaceString(insertionContext.startOffset-1, insertionContext.startOffset, ":")
+        if (!KeyboardState.shiftDown)
+        {
+            super.handleInsert(insertionContext, lookupElement)
+            if (replaceDot)
+                insertionContext.document.replaceString(insertionContext.startOffset-1, insertionContext.startOffset, ":")
+        }
     }
 
     override fun getParams(): Array<LuaParamInfo> = myParams

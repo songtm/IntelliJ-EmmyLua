@@ -6,17 +6,26 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
-import com.intellij.ui.awt.RelativePoint
-import java.net.DatagramPacket
-import java.net.DatagramSocket
-import java.net.InetAddress
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.psi.PsiFile
+import com.intellij.ui.awt.RelativePoint
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.project.LuaSettings
 import java.awt.Color
+import java.awt.KeyboardFocusManager
+import java.awt.event.KeyEvent
+import java.net.DatagramPacket
+import java.net.DatagramSocket
+import java.net.InetAddress
 import javax.swing.Icon
 
+
+class KeyboardState {
+    companion object
+    {
+        var shiftDown = false
+    }
+}
 
 class LuaLiveCodingAction : ToggleAction("Lua Live Coding") {
     override fun isSelected(actionEvent: AnActionEvent): Boolean {
@@ -32,18 +41,30 @@ class LuaLiveCodingAction : ToggleAction("Lua Live Coding") {
     companion object {
         private var enabled = false
 
+        init {
+            KeyboardFocusManager.getCurrentKeyboardFocusManager().
+            addKeyEventPostProcessor { e: KeyEvent ->
+                if (e.id == KeyEvent.KEY_PRESSED && e.keyCode == KeyEvent.VK_SHIFT)
+                {
+                    KeyboardState.shiftDown = true
+                }
+                if (e.id == KeyEvent.KEY_RELEASED && e.keyCode == KeyEvent.VK_SHIFT)
+                {
+                    KeyboardState.shiftDown = false
+                }
+                true
+            }
+        }
+
         fun sendCommand(filename: String, project: Project, psiFile: PsiFile) {
             if (!enabled) return
 
             val clientSocket = DatagramSocket()
             var sendData = "SAVE|$filename".toByteArray()
             var udpserver = LuaSettings.instance.reverseServer
-            if (udpserver.contains("127.0.0.1") || udpserver.contains("localhost"))
-            {
+            if (udpserver.contains("127.0.0.1") || udpserver.contains("localhost")) {
                 //local pc
-            }
-            else
-            {
+            } else {
                 //remote mobile
                 sendData = "SAVE|$filename|${psiFile.originalFile.text}".toByteArray()
             }
