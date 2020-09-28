@@ -582,7 +582,7 @@ fun getVisibility(member: LuaClassMember): Visibility {
             return Visibility.get(it.text)
         }
     }
-    return Visibility.PUBLIC
+    return Visibility.getByName(member.name?: "")
 }
 
 fun getVisibility(classMethodDef: LuaClassMethodDef): Visibility {

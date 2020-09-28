@@ -19,6 +19,7 @@ package com.tang.intellij.lua.psi
 import com.intellij.ui.RowIcon
 import com.intellij.util.BitUtil
 import com.tang.intellij.lua.lang.LuaIcons
+import com.tang.intellij.lua.project.LuaSettings
 import javax.swing.Icon
 
 enum class Visibility(val text: String, val icon: Icon, val bitMask: Int) {
@@ -47,6 +48,16 @@ enum class Visibility(val text: String, val icon: Icon, val bitMask: Int) {
             BitUtil.isSet(flags, PRIVATE.bitMask) -> PRIVATE
             BitUtil.isSet(flags, PROTECTED.bitMask) -> PROTECTED
             else -> PUBLIC
+        }
+        fun getByName(name: String) = when  ///songtm 下线下, m_, onX开头的当成protected
+        {
+            (LuaSettings.instance.autoProtectedMember && name.length > 2 &&
+                    (name.startsWith("_")
+                            || name.startsWith("m_")
+                            || name.startsWith("c_")
+                            || (name.startsWith("on") && name[2].isUpperCase()))
+            )-> PROTECTED
+            else-> PUBLIC
         }
     }
 }

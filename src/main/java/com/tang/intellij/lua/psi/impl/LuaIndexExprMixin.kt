@@ -63,6 +63,6 @@ abstract class LuaIndexExprMixin : LuaExprStubMixin<LuaIndexExprStub>, LuaExpr, 
             return stub.visibility
         return comment?.findTag(LuaDocAccessModifier::class.java)?.let {
             Visibility.get(it.text)
-        } ?: Visibility.PUBLIC
+        } ?: (Visibility.getByName(name ?: ""))
     }
 }
