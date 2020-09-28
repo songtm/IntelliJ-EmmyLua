@@ -96,7 +96,7 @@ class LocalAndGlobalCompletionProvider(private val mask: Int) : ClassMemberCompl
 
         //local
         if (has(LOCAL_FUN) || has(LOCAL_VAR)) {
-            LuaDeclarationTree.get(cur.containingFile).walkUpLocal(cur) {
+            LuaDeclarationTree.get(cur.realContext.containingFile).walkUpLocal(cur.realContext) {
                 val nameDef = it.psi
                 val name = it.name
                 if (nameDef is LuaPsiElement &&
