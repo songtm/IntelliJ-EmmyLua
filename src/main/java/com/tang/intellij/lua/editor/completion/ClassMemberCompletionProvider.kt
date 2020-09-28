@@ -187,14 +187,21 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
 
                 val lookupString = handlerProcessor?.processLookupString(name, classMember, fnTy) ?: name
 
+                var replaceDot = (!isColonStyle)&&it.colonCall//todo
+                var realColonStyle = if (replaceDot) true else isColonStyle
+
                 val element = LookupElementFactory.createMethodLookupElement(clazzName,
                         lookupString,
                         classMember,
                         it,
                         bold,
-                        isColonStyle,
+                        realColonStyle,
                         fnTy,
                         LuaIcons.CLASS_METHOD)
+
+                var handler  = element.handler as SignatureInsertHandler
+                if (handler != null) handler.replaceDot = replaceDot
+
                 val ele = handlerProcessor?.process(element, classMember, fnTy) ?: element
                 completionResultSet.addElement(ele)
                 true

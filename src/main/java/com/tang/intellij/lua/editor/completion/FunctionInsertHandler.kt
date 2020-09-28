@@ -18,6 +18,7 @@ package com.tang.intellij.lua.editor.completion
 
 import com.intellij.codeInsight.completion.CompletionInitializationContext
 import com.intellij.codeInsight.completion.InsertionContext
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.psi.*
@@ -26,13 +27,20 @@ import com.tang.intellij.lua.ty.hasVarargs
 import com.tang.intellij.lua.ty.processArgs
 
 open class SignatureInsertHandler(val sig: IFunSignature, private val isColonStyle: Boolean = false) : ArgsInsertHandler() {
+    var replaceDot = false
 
     private val myParams: Array<LuaParamInfo> by lazy {
         val list = mutableListOf<LuaParamInfo>()
-        sig.processArgs(null, isColonStyle) { _, param ->
+        sig.processArgs(null, if (replaceDot) true else isColonStyle) { _, param ->
             list.add(param)
         }
         list.toTypedArray()
+    }
+
+    override fun handleInsert(insertionContext: InsertionContext, lookupElement: LookupElement) {
+        super.handleInsert(insertionContext, lookupElement)
+        if (replaceDot)
+            insertionContext.document.replaceString(insertionContext.startOffset-1, insertionContext.startOffset, ":")
     }
 
     override fun getParams(): Array<LuaParamInfo> = myParams
