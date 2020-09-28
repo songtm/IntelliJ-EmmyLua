@@ -59,6 +59,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     private JTextField requireFunctionNames;
     private JTextField tooLargerFileThreshold;
     private JTextField reverseServer;
+    private JCheckBox dotAsColon;
 
     public LuaSettingsPanel(LuaSettings settings) {
         this.settings = settings;
@@ -72,6 +73,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         recognizeGlobalNameAsCheckBox.setSelected(settings.isRecognizeGlobalNameAsType());
         additionalRoots.setRoots(settings.getAdditionalSourcesRoot());
         enableGenericCheckBox.setSelected(settings.getEnableGeneric());
+        dotAsColon.setSelected(settings.getDotAsColon());
         requireFunctionNames.setText(settings.getRequireLikeFunctionNamesString());
         tooLargerFileThreshold.setDocument(new IntegerDocument());
         tooLargerFileThreshold.setText(String.valueOf(settings.getTooLargerFileThreshold()));
@@ -113,6 +115,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         return !StringUtil.equals(settings.getConstructorNamesString(), constructorNames.getText()) ||
                 !StringUtil.equals(settings.getRequireLikeFunctionNamesString(), requireFunctionNames.getText()) ||
                 !StringUtil.equals(settings.getReverseServer(), reverseServer.getText()) ||
+                settings.getDotAsColon() != dotAsColon.isSelected() ||
                 settings.getTooLargerFileThreshold() != getTooLargerFileThreshold() ||
                 settings.isStrictDoc() != strictDoc.isSelected() ||
                 settings.isSmartCloseEnd() != smartCloseEnd.isSelected() ||
@@ -134,6 +137,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         if (reverseServerText.equals("")) reverseServerText = "127.0.0.1";
         settings.setReverseServer(reverseServerText);
         reverseServer.setText(settings.getReverseServer());
+        settings.setDotAsColon(dotAsColon.isSelected());
 
         settings.setConstructorNamesString(constructorNames.getText());
         constructorNames.setText(settings.getConstructorNamesString());

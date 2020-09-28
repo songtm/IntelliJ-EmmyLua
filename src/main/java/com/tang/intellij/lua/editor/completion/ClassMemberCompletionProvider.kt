@@ -25,6 +25,7 @@ import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.util.Processor
 import com.tang.intellij.lua.lang.LuaIcons
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
@@ -187,7 +188,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
 
                 val lookupString = handlerProcessor?.processLookupString(name, classMember, fnTy) ?: name
 
-                var replaceDot = (!isColonStyle)&&it.colonCall//todo
+                var replaceDot = (!isColonStyle)&&it.colonCall && LuaSettings.instance.dotAsColon
                 var realColonStyle = if (replaceDot) true else isColonStyle
 
                 val element = LookupElementFactory.createMethodLookupElement(clazzName,
