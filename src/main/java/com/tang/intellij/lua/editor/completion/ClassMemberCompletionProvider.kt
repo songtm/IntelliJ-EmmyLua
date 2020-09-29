@@ -65,8 +65,8 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
             ////songtm
             if (prefixType is TyClass) {
                 val superClass = prefixType.getSuperClass(context)
-                val prefixName  = indexExpr.firstChild as LuaNameExprImpl
-                if (prefixName != null && prefixName.name == "self" && superClass != null)
+                val isNameExpr  = indexExpr.firstChild is LuaNameExprImpl
+                if (isNameExpr && (indexExpr.firstChild as LuaNameExprImpl).name == "self" && superClass != null)
                 {
                     val ele = LookupElementBuilder.create(LuaSettings.instance.superRefName).withTailText("  [super class]")
                             .withIcon(LuaIcons.CLASS).withTypeText(superClass.displayName)
