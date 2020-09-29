@@ -34,6 +34,7 @@
 
         <!--CreateFromTemplate-->
         <createFromTemplateHandler implementation="com.tang.intellij.lua.actions.LuaCreateFromTemplateHandler"/>
+        <internalFileTemplate name="NewLua"/>
 
         <virtualFileSystem implementationClass="com.tang.intellij.lua.debugger.attach.vfs.MemoryFileSystem" key="lua-dummy"/>
 
@@ -332,9 +333,10 @@
         </group>
         
         <action class="com.tang.intellij.lua.actions.CreateLuaFileAction"
-                text="Lua File"
+                text="New Lua File"
                 id="lua.newFile">
             <add-to-group group-id="NewGroup" anchor="before" relative-to-action="NewFromTemplate"/>
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
         </action>
         <action class="com.tang.intellij.lua.actions.CreateTutorialFileAction"
                 text="EmmyDoc Tutorial"
