@@ -55,6 +55,7 @@ enum class Visibility(val text: String, val icon: Icon, val bitMask: Int) {
                     (name.startsWith("_")
                             || name.startsWith("m_")
                             || name.startsWith("c_")
+                            || name.startsWith("sc_")
                             || (name.startsWith("on") && name[2].isUpperCase()))
             )-> PROTECTED
             else-> PUBLIC

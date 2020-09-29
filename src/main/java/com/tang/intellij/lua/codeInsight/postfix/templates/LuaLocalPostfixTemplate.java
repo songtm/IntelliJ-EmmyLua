@@ -20,6 +20,7 @@ import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateWithEx
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.tang.intellij.lua.psi.LuaExpr;
+import com.tang.intellij.lua.refactoring.rename.LuaIntroducePBEventHandler;
 import com.tang.intellij.lua.refactoring.rename.LuaIntroduceVarHandler;
 import org.jetbrains.annotations.NotNull;
 
@@ -40,17 +41,31 @@ public class LuaLocalPostfixTemplate extends PostfixTemplateWithExpressionSelect
 
     @Override
     protected void expandForChooseExpression(@NotNull PsiElement psiElement, @NotNull Editor editor) {
-        LuaIntroduceVarHandler handler = new LuaIntroduceVarHandler();
         String text = psiElement.getNode().getText();
-        String varName = "var";
-        if (text.length() > 7 && text.substring(0, 7).equals("require") ) {
-            String pattern = "require\\(.*\\.(\\w+)";//require("xxx.xx.xx")
-            Pattern r = Pattern.compile(pattern);
-            Matcher m = r.matcher(text);
-            if (m.find()) {
-                varName = m.group(1);
-            }
+
+        if (text.matches("self\\.m_\\w+$")){
+            LuaIntroducePBEventHandler handler = new LuaIntroducePBEventHandler();
+            String funcname = text.substring(7, 8).toUpperCase() + text.substring(8, text.length());
+            handler.invoke(editor.getProject(), editor, (LuaExpr) psiElement, "var", "get"+funcname);
         }
-        handler.invoke(psiElement.getProject(), editor, (LuaExpr) psiElement, varName);
+        else if (text.length() > 4 && text.substring(0, 3).equals("SC_") ) {
+            LuaIntroducePBEventHandler handler = new LuaIntroducePBEventHandler();
+            handler.invoke(editor.getProject(), editor, (LuaExpr) psiElement, "var");
+        }
+        else
+        {
+            LuaIntroduceVarHandler handler = new LuaIntroduceVarHandler();
+            String varName = "var";
+            if (text.length() > 7 && text.substring(0, 7).equals("require") ) {
+                String pattern = "require\\(.*\\.(\\w+)";//require("xxx.xx.xx")
+                Pattern r = Pattern.compile(pattern);
+                Matcher m = r.matcher(text);
+                if (m.find()) {
+                    varName = m.group(1);
+                }
+            }
+            handler.invoke(editor.getProject(), editor, (LuaExpr) psiElement, varName);
+        }
+
     }
 }
