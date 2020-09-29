@@ -92,7 +92,8 @@ class LuaCompletionContributor : CompletionContributor() {
         val session = CompletionSession(parameters, result)
         parameters.editor.putUserData(CompletionSession.KEY, session)
         super.fillCompletionVariants(parameters, result)
-        if (LuaSettings.instance.isShowWordsInFile && suggestWords && session.isSuggestWords && !result.isStopped) {
+        var shouldShow = LuaSettings.instance.isShowWordsInFile || parameters.invocationCount >= 2//todo 最好是根据提示的数量来CompletionProgressIndicator.java
+        if (shouldShow && suggestWords && session.isSuggestWords && !result.isStopped) {
             suggestWordsInFile(parameters)
         }
     }
