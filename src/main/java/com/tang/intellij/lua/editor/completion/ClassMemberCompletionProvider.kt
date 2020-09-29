@@ -64,7 +64,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
             }
             //smart
             val nameExpr = indexExpr.prefixExpr
-            if (nameExpr is LuaNameExpr) {
+            if (false && (nameExpr is LuaNameExpr)) {
                 val colon = if (isColon) ":" else "."
                 val prefixName = nameExpr.text
                 val postfixName = indexExpr.name?.let { it.substring(0, it.indexOf(CompletionInitializationContext.DUMMY_IDENTIFIER_TRIMMED)) }
