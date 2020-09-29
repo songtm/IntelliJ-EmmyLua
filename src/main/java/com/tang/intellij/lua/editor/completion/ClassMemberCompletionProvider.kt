@@ -174,8 +174,9 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                            field: LuaClassField,
                            ty:ITy?,
                            handlerProcessor: HandlerProcessor?) {
-        val name = field.name
+        var name = field.name
         if (name != null) {
+            name = handlerProcessor?.processLookupString(name, field, ty) ?: name
             val element = LookupElementFactory.createFieldLookupElement(clazzName, name, field, ty, bold)
             val ele = handlerProcessor?.process(element, field, null) ?: element
             completionResultSet.addElement(ele)

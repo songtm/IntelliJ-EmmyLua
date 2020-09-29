@@ -44,11 +44,13 @@ class SuggestSelfMemberProvider : ClassMemberCompletionProvider() {
                 val contextTy = LuaPsiTreeUtil.findContextClass(position)
                 type.processMembers(searchContext) { curType, member ->
                     if (curType.isVisibleInScope(project, contextTy, member.visibility)) {
+                        val membertype = member.guessType(searchContext)
+                        val completeType = if (membertype is ITyFunction) MemberCompletionMode.Colon else MemberCompletionMode.Dot
                         addMember(completionResultSet,
                                 member,
                                 curType,
                                 type,
-                                MemberCompletionMode.Colon,
+                                completeType,//MemberCompletionMode.Colon,
                                 project,
                                 object : HandlerProcessor() {
                                     override fun process(element: LuaLookupElement, member: LuaClassMember, memberTy: ITy?): LookupElement { return element }

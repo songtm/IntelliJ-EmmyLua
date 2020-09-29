@@ -87,7 +87,7 @@ class LookupElementFactory {
                                      type:ITy?,
                                      bold: Boolean): LuaLookupElement {
             val element = LuaFieldLookupElement(name, field, type, bold)
-            if (!LuaRefactoringUtil.isLuaIdentifier(name)) {
+            if (!name.startsWith("self.") && !LuaRefactoringUtil.isLuaIdentifier(name)) {
                 element.lookupString = "['$name']"
                 val baseHandler = element.handler
                 element.handler = InsertHandler<LookupElement> { insertionContext, lookupElement ->
