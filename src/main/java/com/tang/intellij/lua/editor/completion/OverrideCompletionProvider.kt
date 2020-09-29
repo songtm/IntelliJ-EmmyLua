@@ -21,6 +21,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
+import com.intellij.icons.AllIcons
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
 import com.tang.intellij.lua.lang.LuaIcons
@@ -66,7 +67,7 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
                 def.name?.let {
                     if (memberNameSet.add(it)) {
                         val elementBuilder = LookupElementBuilder.create(def.name!!)
-                                .withIcon(LuaIcons.CLASS_METHOD_OVERRIDING)
+                                .withIcon(AllIcons.Gutter.OverridingMethod)
                                 .withInsertHandler(OverrideInsertHandler(def))
                                 .withTailText(def.paramSignature)
 
