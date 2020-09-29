@@ -217,8 +217,12 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                         fnTy,
                         LuaIcons.CLASS_METHOD)
 
-                var handler  = element.handler as SignatureInsertHandler
-                if (handler != null) handler.replaceDot = replaceDot
+                if ((thisType.className == "cs") && (lookupString.startsWith("cs_"))) {
+                    element.handler = CSSignatureInsertHandler(it, isColonStyle)
+                }
+                else if (element.handler is SignatureInsertHandler)
+                    (element.handler as SignatureInsertHandler).replaceDot = replaceDot
+
 
                 val ele = handlerProcessor?.process(element, classMember, fnTy) ?: element
                 completionResultSet.addElement(ele)
