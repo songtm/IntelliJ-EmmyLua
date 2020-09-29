@@ -173,11 +173,11 @@ class LuaIntroducePBEventHandler : RefactoringActionHandler {
             if (clsdef != null) {
                 var comment = "\n---@param data "+element.text.toLowerCase()
                 var callbackFun = LuaElementFactory.createWith(operation.project,
-                        comment+"\nfunction " + clsdef.classMethodName.expr.text + ":" + element.text.toLowerCase() + "(id, data)\n\tdumpx(data)\nend")
+                        comment+"\nfunction " + clsdef.classMethodName.expr.text + ":" + element.text.toLowerCase() + "(data)\n\tdump(data)\nend")
                 clsdef.parent.addAfter(callbackFun.parent, clsdef)
             }
 
-            var regCall = LuaElementFactory.createWith(operation.project, "PROTO(" + element.text + ", self, self." + element.text.toLowerCase() + ")")
+            var regCall = LuaElementFactory.createWith(operation.project, "PROTOREG(" + element.text + ", self, self." + element.text.toLowerCase() + ")")
             regCall = element.parent.replace(regCall)
 
 //            val nameDef = PsiTreeUtil.findChildOfType(regCall, LuaNameDef::class.java)!!
