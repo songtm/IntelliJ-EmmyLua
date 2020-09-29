@@ -21,12 +21,14 @@ import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.PrioritizedLookupElement
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.progress.ProgressManager
 import com.intellij.openapi.project.Project
 import com.intellij.util.Processor
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.psi.impl.LuaNameExprImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
@@ -59,6 +61,20 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
             val contextTy = LuaPsiTreeUtil.findContextClass(indexExpr)
             val context = SearchContext.get(project)
             val prefixType = indexExpr.guessParentType(context)
+
+            ////songtm
+            if (prefixType is TyClass) {
+                val superClass = prefixType.getSuperClass(context)
+                val prefixName  = indexExpr.firstChild as LuaNameExprImpl
+                if (prefixName != null && prefixName.name == "self" && superClass != null)
+                {
+                    val ele = LookupElementBuilder.create(LuaSettings.instance.superRefName).withTailText("  [super class]")
+                            .withIcon(LuaIcons.CLASS).withTypeText(superClass.displayName)
+                    completionResultSet.addElement(ele)
+                }
+            }
+            ////
+
             if (!Ty.isInvalid(prefixType)) {
                 complete(isColon, project, contextTy, prefixType, completionResultSet, completionResultSet.prefixMatcher, null)
             }

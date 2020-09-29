@@ -34,6 +34,7 @@ class LuaSettings : PersistentStateComponent<LuaSettings> {
     var reverseServer:String = "127.0.0.1"
     var dotAsColon = false
     var autoProtectedMember = true
+    var superRefName = "super"
 
     //自定义require函数，参考constructorNames
     var requireLikeFunctionNames: Array<String> = arrayOf("require")

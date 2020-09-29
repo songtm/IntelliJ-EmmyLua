@@ -384,6 +384,12 @@ private fun guessFieldType(fieldName: String, type: ITyClass, context: SearchCon
         true
     })
 
+    if (set == Ty.UNKNOWN && fieldName == LuaSettings.instance.superRefName) {
+        val superClass = type.getSuperClass(context)
+        if (superClass != null)
+            set = set.union(superClass)
+    }
+
     return set
 }
 
