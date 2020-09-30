@@ -21,16 +21,17 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.Constants
-import com.tang.intellij.lua.comment.psi.impl.LuaDocTagDefImpl
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagFieldImpl
 import com.tang.intellij.lua.psi.LuaClassField
 import com.tang.intellij.lua.psi.LuaClassMember
+import com.tang.intellij.lua.psi.LuaClassMethodDef
 import com.tang.intellij.lua.psi.LuaPsiElement
 import com.tang.intellij.lua.refactoring.LuaRefactoringUtil
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.ITy
 import com.tang.intellij.lua.ty.ITyFunction
 import javax.swing.Icon
+import kotlin.math.min
 
 class LookupElementFactory {
     companion object {
@@ -79,7 +80,22 @@ class LookupElementFactory {
             if (!isColonStyle)
                 element.setItemTextUnderlined(true)
 
-            element.setTailText("  [$clazzName]")
+            ///////////////cs.cs_xxx注释提示
+            var tailTxt = "  [$clazzName]"
+            if (classMember is LuaClassMethodDef) {
+                if (clazzName == "[global cs]" && lookupString.startsWith("cs_"))
+                {
+                    tailTxt = ""
+                    var comment = classMember.comment
+                    var str = comment?.firstChild?.nextSibling?.text
+                    if (str != null && str != "@") {
+                        tailTxt += (" $str")
+                    }
+                }
+            }
+            element.setTailText(tailTxt)
+            //////////
+
             return element
         }
 
