@@ -21,6 +21,8 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.comment.psi.impl.LuaDocTagDefImpl
+import com.tang.intellij.lua.comment.psi.impl.LuaDocTagFieldImpl
 import com.tang.intellij.lua.psi.LuaClassField
 import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.psi.LuaPsiElement
@@ -96,7 +98,18 @@ class LookupElementFactory {
                     insertionContext.document.deleteString(insertionContext.startOffset - 1, insertionContext.startOffset)
                 }
             }
-            element.setTailText("  [$clazzName]")
+
+            //---@field 注释提示
+            if (field is LuaDocTagFieldImpl)
+            {
+                val comment  = field.commentString?.string?.text ?: ""
+                element.setTailText("  [${clazzName}]  "+comment)
+            }
+            else
+            {
+                element.setTailText("  [${clazzName}]")
+            }
+
             return element
         }
     }
