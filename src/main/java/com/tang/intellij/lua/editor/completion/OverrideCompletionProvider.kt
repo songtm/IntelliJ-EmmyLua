@@ -21,6 +21,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
+import com.intellij.icons.AllIcons
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
 import com.tang.intellij.lua.lang.LuaIcons
@@ -62,11 +63,11 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
         val context = SearchContext.get(project)
         val clazzName = sup.className
         LuaClassMemberIndex.processAll(TyLazyClass(clazzName), context, Processor { def ->
-            if (def is LuaClassMethod) {
+            if (def is LuaClassMethod && def.visibility != Visibility.PRIVATE) {//songtm private的不能override
                 def.name?.let {
                     if (memberNameSet.add(it)) {
                         val elementBuilder = LookupElementBuilder.create(def.name!!)
-                                .withIcon(LuaIcons.CLASS_METHOD_OVERRIDING)
+                                .withIcon(AllIcons.Gutter.OverridingMethod)
                                 .withInsertHandler(OverrideInsertHandler(def))
                                 .withTailText(def.paramSignature)
 

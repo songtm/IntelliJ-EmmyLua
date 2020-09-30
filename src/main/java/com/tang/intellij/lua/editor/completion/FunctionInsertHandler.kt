@@ -19,13 +19,19 @@ package com.tang.intellij.lua.editor.completion
 import com.intellij.codeInsight.completion.CompletionInitializationContext
 import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElement
+import com.intellij.codeInsight.template.TemplateManager
+import com.intellij.codeInsight.template.impl.MacroCallNode
+import com.intellij.codeInsight.template.impl.TextExpression
+import com.intellij.codeInsight.template.macro.CompleteMacro
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.actions.KeyboardState
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.hasVarargs
 import com.tang.intellij.lua.ty.processArgs
+import com.intellij.codeInsight.template.Template
 
 open class SignatureInsertHandler(val sig: IFunSignature, private val isColonStyle: Boolean = false) : ArgsInsertHandler() {
     var replaceDot = false
@@ -75,3 +81,46 @@ class SignatureInsertHandlerForString(sig: IFunSignature,
         super.appendSignature(insertionContext, editor, element)
     }
 }
+
+
+class CSSignatureInsertHandler(val sig: IFunSignature, private val isColonStyle: Boolean = false) : ArgsInsertHandler() {
+    private var protoName = "CS_XXX"
+    private val myParams: Array<LuaParamInfo> by lazy {
+        val list = mutableListOf<LuaParamInfo>()
+        sig.processArgs(null, isColonStyle) { _, param ->
+            list.add(param)
+        }
+        list.toTypedArray()
+    }
+
+    override fun getParams(): Array<LuaParamInfo> = myParams
+
+    override val autoInsertParameters = true
+    override fun handleInsert(insertionContext: InsertionContext, lookupElement: LookupElement) {
+        protoName = lookupElement.lookupString.toUpperCase()
+        super.handleInsert(insertionContext, lookupElement)
+        insertionContext.document.deleteString(insertionContext.startOffset - 3, insertionContext.startOffset + protoName.length)
+    }
+
+    override fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>): Template {
+
+        val template = manager.createTemplate("", "") //key, group
+        template.addTextSegment("PROTOSEND($protoName, {")
+
+        var isFirst = true
+        for (i in paramNameDefList.indices) {
+            if (mask and (1 shl i) == 0) continue
+            val paramNameDef = paramNameDefList[i]
+            if (!isFirst)
+                template.addTextSegment(", ")
+            template.addTextSegment(paramNameDef.name + "=")
+            val completion = MacroCallNode(CompleteMacro())
+            template.addVariable(paramNameDef.name, completion, TextExpression(paramNameDef.ty.displayName), true)
+            isFirst = false
+        }
+        template.addTextSegment("})")
+        return template
+    }
+}
+
+

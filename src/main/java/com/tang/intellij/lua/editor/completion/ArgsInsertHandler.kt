@@ -42,7 +42,7 @@ abstract class ArgsInsertHandler : InsertHandler<LookupElement> {
 
     protected open val autoInsertParameters: Boolean = LuaSettings.instance.autoInsertParameters
 
-    private var mask = -1
+    protected var mask = -1
 
     fun withMask(mask: Int): ArgsInsertHandler {
         this.mask = mask
