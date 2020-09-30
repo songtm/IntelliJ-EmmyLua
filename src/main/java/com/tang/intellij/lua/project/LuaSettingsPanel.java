@@ -62,6 +62,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     private JCheckBox dotAsColon;
     private JCheckBox autoProtectedClassMember;
     private JTextField superRefName;
+    private JCheckBox autoInsertParameters;
 
     public LuaSettingsPanel(LuaSettings settings) {
         this.settings = settings;
@@ -78,6 +79,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         enableGenericCheckBox.setSelected(settings.getEnableGeneric());
         dotAsColon.setSelected(settings.getDotAsColon());
         autoProtectedClassMember.setSelected(settings.getAutoProtectedMember());
+        autoInsertParameters.setSelected(settings.getAutoInsertParameters());
         requireFunctionNames.setText(settings.getRequireLikeFunctionNamesString());
         tooLargerFileThreshold.setDocument(new IntegerDocument());
         tooLargerFileThreshold.setText(String.valueOf(settings.getTooLargerFileThreshold()));
@@ -122,6 +124,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
                 !StringUtil.equals(settings.getSuperRefName(), superRefName.getText()) ||
                 settings.getDotAsColon() != dotAsColon.isSelected() ||
                 settings.getAutoProtectedMember() != autoProtectedClassMember.isSelected() ||
+                settings.getAutoInsertParameters() != autoInsertParameters.isSelected() ||
                 settings.getTooLargerFileThreshold() != getTooLargerFileThreshold() ||
                 settings.isStrictDoc() != strictDoc.isSelected() ||
                 settings.isSmartCloseEnd() != smartCloseEnd.isSelected() ||
@@ -147,6 +150,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
 
         settings.setDotAsColon(dotAsColon.isSelected());
         settings.setAutoProtectedMember(autoProtectedClassMember.isSelected());
+        settings.setAutoInsertParameters(autoInsertParameters.isSelected());
 
         settings.setConstructorNamesString(constructorNames.getText());
         constructorNames.setText(settings.getConstructorNamesString());
