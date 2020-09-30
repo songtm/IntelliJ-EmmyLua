@@ -139,12 +139,12 @@ private fun LuaNameDef.infer(context: SearchContext): ITy {
                     }
                 }
             }
-
-            //anonymous
-            if (type !is ITyPrimitive)
-                type = type.union(TyClass.createAnonymousType(this))
-            else if (type == Ty.TABLE)
-                type = type.union(TyClass.createAnonymousType(this))
+//songtm注释 避免了生成一堆type union, 也提高了性能?2020年9月30日
+//            //anonymous
+//            if (type !is ITyPrimitive)
+//                type = type.union(TyClass.createAnonymousType(this))
+//            else if (type == Ty.TABLE)
+//                type = type.union(TyClass.createAnonymousType(this))
         }
     }
     return type
