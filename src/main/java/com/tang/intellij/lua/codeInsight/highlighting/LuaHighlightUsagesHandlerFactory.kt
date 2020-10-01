@@ -24,6 +24,7 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Consumer
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.reference.LuaNameReference
 
 /**
  *
@@ -36,7 +37,7 @@ class LuaHighlightUsagesHandlerFactory : HighlightUsagesHandlerFactoryBase() {
                                               psiElement: PsiElement): HighlightUsagesHandlerBase<*>? {
         when(psiElement.node.elementType) {
             LuaTypes.RETURN -> {
-                val returnStat = PsiTreeUtil.getParentOfType(psiElement, LuaReturnStat::class.java)
+            val returnStat = PsiTreeUtil.getParentOfType(psiElement, LuaReturnStat::class.java)
                 if (returnStat != null) {
                     val funcBody = PsiTreeUtil.getParentOfType(returnStat, LuaFuncBody::class.java)
                     if (funcBody != null) {
@@ -66,6 +67,10 @@ class LuaHighlightUsagesHandlerFactory : HighlightUsagesHandlerFactoryBase() {
                         override fun getTargets() = arrayListOf(psiElement)
                     }
                 }
+                if (parent is LuaNameExpr)
+                {
+                    return LuaVarHighlightHandler(editor, psiFile, psiElement, parent)
+                }
             }
         }
         return null
@@ -79,6 +84,34 @@ private class LoopHandler(editor: Editor, psiFile: PsiFile, val psi:PsiElement, 
         loop.head?.let { addOccurrence(it) }
         loop.end?.let { addOccurrence(it) }
         addOccurrence(psi)
+    }
+
+    override fun selectTargets(list: MutableList<out PsiElement>, consumer: Consumer<in MutableList<out PsiElement>>) {}
+
+}
+
+//songtianming 点击一个变量时高亮所有class method里面的引用, 以前有这个功能?
+private class LuaVarHighlightHandler(editor: Editor, psiFile: PsiFile, val psi:PsiElement, val nameExpr: LuaNameExpr) : HighlightUsagesHandlerBase<PsiElement>(editor, psiFile) {
+    override fun getTargets(): ArrayList<PsiElement> {
+        val resolve: PsiElement? = LuaNameReference(nameExpr).resolve()
+        if (resolve != null)
+        {
+            return arrayListOf(resolve)
+        }
+        return arrayListOf()
+    }
+
+    override fun computeUsages(list: MutableList<out PsiElement>) {
+        if (list.size == 0) return
+        val resolve = list[0]
+        addOccurrence(resolve)
+        val classMethod = PsiTreeUtil.getParentOfType(resolve, LuaClassMethodDef::class.java) ?: return
+        val children = PsiTreeUtil.findChildrenOfType(classMethod, LuaNameExpr::class.java)
+        children.forEach {
+            if (LuaNameReference(it).isReferenceTo(resolve)) {
+                addOccurrence(it)
+            }
+        }
     }
 
     override fun selectTargets(list: MutableList<out PsiElement>, consumer: Consumer<in MutableList<out PsiElement>>) {}
