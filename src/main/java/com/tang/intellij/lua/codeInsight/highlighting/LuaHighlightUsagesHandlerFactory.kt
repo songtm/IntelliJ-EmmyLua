@@ -72,10 +72,10 @@ class LuaHighlightUsagesHandlerFactory : HighlightUsagesHandlerFactoryBase() {
                 {
                     return LuaVarHighlightHandler(editor, psiFile, psiElement, parent)
                 }
-                else if(parent is LuaIndexExpr)
-                {
-                    return LuaIndexVarHighlightHandler(editor, psiFile, psiElement, parent)
-                }
+//                else if(parent is LuaIndexExpr) //bug有点多, GameObjectEx.FindComponent的高亮就有问题, 暂时不打开
+//                {
+//                    return LuaIndexVarHighlightHandler(editor, psiFile, psiElement, parent)
+//                }
             }
         }
         return null
