@@ -21,9 +21,11 @@ import javax.swing.Icon
 
 
 class KeyboardState {
-    companion object
+companion object
     {
         var shiftDown = false
+        var altDown = false
+
     }
 }
 
@@ -51,6 +53,14 @@ class LuaLiveCodingAction : ToggleAction("Lua Live Coding") {
                 if (e.id == KeyEvent.KEY_RELEASED && e.keyCode == KeyEvent.VK_SHIFT)
                 {
                     KeyboardState.shiftDown = false
+                }
+                if (e.id == KeyEvent.KEY_PRESSED && e.keyCode == KeyEvent.VK_ALT)
+                {
+                    KeyboardState.altDown = true
+                }
+                if (e.id == KeyEvent.KEY_RELEASED && e.keyCode == KeyEvent.VK_ALT)
+                {
+                    KeyboardState.altDown = false
                 }
                 true
             }
