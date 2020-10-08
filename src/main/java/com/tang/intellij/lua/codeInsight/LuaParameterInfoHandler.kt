@@ -20,10 +20,10 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.lang.parameterInfo.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
-import com.tang.intellij.lua.psi.LuaArgs
-import com.tang.intellij.lua.psi.LuaCallExpr
-import com.tang.intellij.lua.psi.LuaListArgs
-import com.tang.intellij.lua.psi.LuaTypes
+import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.psi.impl.LuaCallExprImpl
+import com.tang.intellij.lua.psi.impl.LuaIndexExprImpl
+import com.tang.intellij.lua.psi.impl.LuaListArgsImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
 
@@ -97,6 +97,42 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
         if (o == null)
             return
 
+        //songtm 2020年10月8日, 根据第一个参数的类型找到vargs的类型 添加到参数提示后面!
+        o.sig.appendVargsMember = null
+        var exprList = (context.parameterOwner as LuaListArgsImpl).exprList
+        if (exprList != null && exprList.size > 0 && context.parameterOwner.parent is LuaCallExprImpl)
+        {
+            val searchContext = SearchContext.get(context.parameterOwner.project)
+            val callExp = context.parameterOwner.parent as LuaCallExprImpl
+            var shouldAdd = false
+            var clsName = ""
+            if (callExp.isFunctionCall)
+            {
+                clsName = callExp.firstChild.text//全局函数
+                shouldAdd = appendVargsmap.containsKey(clsName)
+            }
+            else if (callExp.isMethodColonCall || callExp.isMethodDotCall)
+            {
+                clsName = (callExp.firstChild as LuaIndexExprImpl).guessParentType(searchContext).toString()
+                val memName: String? = (callExp.firstChild as LuaIndexExprImpl).id?.text
+                shouldAdd = (appendVargsmap.containsKey(clsName) && memName != null && appendVargsmap[clsName]!!.first == memName)
+            }
+            if (shouldAdd)
+            {
+                var luaExpr: LuaExpr = exprList[0]
+                var guessType: ITy = luaExpr.guessType(searchContext)
+                if (guessType is TyClass)
+                {
+                    var findMember: LuaClassMember? = guessType.findMember(appendVargsmap[clsName]!!.second, searchContext)
+                    if (findMember != null && findMember is LuaClassMethodDef)
+                    {
+                        o.sig.appendVargsMember = findMember
+                    }
+                }
+            }
+        }
+        //
+
         val index = context.currentParameterIndex
         var start = 0
         var end = 0
@@ -123,4 +159,21 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
             )
         }
     }
+
+    companion object
+    {
+        var appendVargsmap:MutableMap<String, Pair<String, String>> =  emptyMap<String, Pair<String, String>>().toMutableMap()
+        init {
+            val str = "UIManager|push|init;pushUI|init"
+            var split = str.split(";")
+            for (s in split) {
+                var split1 = s.split("|")
+                if (split1.size == 2)
+                    appendVargsmap[split1[0]] = Pair("songtmhahaha", split1[1])
+                if (split1.size == 3)
+                    appendVargsmap[split1[0]] = Pair(split1[1], split1[2])
+            }
+        }
+    }
+
 }

@@ -31,6 +31,7 @@ import java.nio.charset.Charset
  */
 @State(name = "LuaSettings", storages = [(Storage("emmy.xml"))])
 class LuaSettings : PersistentStateComponent<LuaSettings> {
+    var appendVargs = "UIManager|push|init;pushUI|init"
     var reverseServer:String = "127.0.0.1"
     var dotAsColon = false
     var autoProtectedMember = true

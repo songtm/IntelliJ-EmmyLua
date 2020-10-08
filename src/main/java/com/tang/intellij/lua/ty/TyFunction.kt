@@ -28,6 +28,7 @@ interface IFunSignature {
     val colonCall: Boolean
     val returnTy: ITy
     val params: Array<LuaParamInfo>
+    var appendVargsMember: LuaClassMethodDef?
     val displayName: String
     val paramSignature: String
     val tyParameters: Array<TyParameter>
@@ -56,6 +57,12 @@ fun IFunSignature.processArgs(thisTy: ITy?, colonStyle: Boolean, processor: (ind
 
     for (i in pIndex until params.size) {
         if (!processor(index++, params[i])) return
+    }
+    if (appendVargsMember != null)
+    {
+        for (param in appendVargsMember!!.params) {
+            if (!processor(index++, param)) return
+        }
     }
 }
 
@@ -101,9 +108,11 @@ fun IFunSignature.hasVarargs(): Boolean {
 
 fun IFunSignature.isGeneric() = tyParameters.isNotEmpty()
 
-abstract class FunSignatureBase(override val colonCall: Boolean,
+abstract class FunSignatureBase(
+                                override val colonCall: Boolean,
                                 override val params: Array<LuaParamInfo>,
-                                override val tyParameters: Array<TyParameter> = emptyArray()
+                                override val tyParameters: Array<TyParameter> = emptyArray(),
+                                var vargsMember : LuaClassMethodDef? = null
 ) : IFunSignature {
     override fun equals(other: Any?): Boolean {
         if (other is IFunSignature) {
@@ -121,6 +130,10 @@ abstract class FunSignatureBase(override val colonCall: Boolean,
         }
         return code
     }
+
+    override var appendVargsMember: LuaClassMethodDef?
+        get() = vargsMember
+        set(value) {vargsMember = value}
 
     override val displayName: String by lazy {
         val paramSB = mutableListOf<String>()
