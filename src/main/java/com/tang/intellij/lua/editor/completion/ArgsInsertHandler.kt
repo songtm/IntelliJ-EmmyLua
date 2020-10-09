@@ -100,6 +100,8 @@ abstract class ArgsInsertHandler : InsertHandler<LookupElement> {
             val template = createTemplate(manager, paramNameDefList)
             editor.caretModel.moveToOffset(insertionContext.selectionEndOffset)
             manager.startTemplate(editor, template)
+            if (paramNameDefList.isNotEmpty() || isVarargs)
+                AutoPopupController.getInstance(insertionContext.project).autoPopupParameterInfo(editor, element)
         } else {
             editor.document.insertString(insertionContext.selectionEndOffset, "()")
             if (getParams().isEmpty() && !isVarargs) {
