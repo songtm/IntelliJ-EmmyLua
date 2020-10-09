@@ -78,6 +78,10 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
         return PsiTreeUtil.findElementOfClassAtOffset(file, context.offset, LuaArgs::class.java, false)
     }
 
+    //songtm temp fix 类函数内调用函数时参数空格后会消失不见, ParameterInfoController.executeUpdateParameterInfo: parameterOwner.equals(elementForUpdating)不相等
+    override fun processFoundElementForUpdatingParameterInfo(parameterOwner: LuaArgs?, context: UpdateParameterInfoContext) {
+        context.parameterOwner = parameterOwner
+    }
     override fun updateParameterInfo(args: LuaArgs, context: UpdateParameterInfoContext) {
         if (args is LuaListArgs) {
             val index = ParameterInfoUtils.getCurrentParameterIndex(args.node, context.offset, LuaTypes.COMMA)
