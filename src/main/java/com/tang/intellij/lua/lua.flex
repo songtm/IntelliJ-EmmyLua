@@ -121,6 +121,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
    }
   "cc.exports."               { return DUMMY_GLOBAL; }
   "_."                        { return DUMMY_TEMP; }
+  "_:"                        { return DUMMY_TEMP2; }
   "and"                       { return AND; }
   "break"                     { return BREAK; }
   "do"                        { return DO; }

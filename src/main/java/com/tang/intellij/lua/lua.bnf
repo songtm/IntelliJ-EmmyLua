@@ -108,6 +108,7 @@
 
         DUMMY_GLOBAL = "cc.exports."
         DUMMY_TEMP = "_."
+        DUMMY_TEMP2 = "_:"
   ]
 
   hooks("localDef|assignStat|tableField") = [leftBinder="MY_LEFT_COMMENT_BINDER" rightBinder="MY_RIGHT_COMMENT_BINDER"]
