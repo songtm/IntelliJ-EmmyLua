@@ -120,6 +120,7 @@ LONG_STRING=\[=*\[[\s\S]*\]=*\]
         else { yypushback(yylength()); yybegin(xCOMMENT); }
    }
   "cc.exports."               { return DUMMY_GLOBAL; }
+  "_."                        { return DUMMY_TEMP; }
   "and"                       { return AND; }
   "break"                     { return BREAK; }
   "do"                        { return DO; }
