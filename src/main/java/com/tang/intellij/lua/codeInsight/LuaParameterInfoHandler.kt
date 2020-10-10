@@ -51,7 +51,15 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
         val luaArgs = PsiTreeUtil.findElementOfClassAtOffset(file, context.offset, LuaArgs::class.java, false)
         if (luaArgs != null) {
             val callExpr = luaArgs.parent as LuaCallExpr
-            val isColonStyle = callExpr.isMethodColonCall
+            var isColonStyle = callExpr.isMethodColonCall
+            //songtm ctor不显示self参数提示
+            if (callExpr.isMethodColonCall || callExpr.isMethodDotCall)
+            {
+                val memName = (callExpr.firstChild as LuaIndexExprImpl).id?.text
+                if (memName == "ctor" || memName == "new")
+                    isColonStyle = true
+            }
+            //
             val type = callExpr.guessParentType(SearchContext.get(context.project))
             val list = mutableListOf<ParameterInfoType>()
             TyUnion.each(type) { ty ->
