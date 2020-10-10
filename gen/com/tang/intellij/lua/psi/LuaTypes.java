@@ -73,6 +73,7 @@ public interface LuaTypes {
   IElementType DOUBLE_DIV = LuaParserDefinitionKt.createToken("//");
   IElementType DUMMY_GLOBAL = LuaParserDefinitionKt.createToken("cc.exports.");
   IElementType DUMMY_TEMP = LuaParserDefinitionKt.createToken("_.");
+  IElementType DUMMY_TEMP2 = LuaParserDefinitionKt.createToken("_:");
   IElementType ELLIPSIS = LuaParserDefinitionKt.createToken("...");
   IElementType ELSE = LuaParserDefinitionKt.createToken("else");
   IElementType ELSEIF = LuaParserDefinitionKt.createToken("elseif");
