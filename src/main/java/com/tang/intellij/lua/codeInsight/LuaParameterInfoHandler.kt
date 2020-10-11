@@ -53,7 +53,7 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
             val callExpr = luaArgs.parent as LuaCallExpr
             var isColonStyle = callExpr.isMethodColonCall
             //songtm ctor不显示self参数提示
-            if (callExpr.isMethodColonCall || callExpr.isMethodDotCall)
+            if ((callExpr.isMethodColonCall || callExpr.isMethodDotCall) && callExpr.firstChild is LuaIndexExprImpl)
             {
                 val memName = (callExpr.firstChild as LuaIndexExprImpl).id?.text
                 if (memName == "ctor" || memName == "new")
