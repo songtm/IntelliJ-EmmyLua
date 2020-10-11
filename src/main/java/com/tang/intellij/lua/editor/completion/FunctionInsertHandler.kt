@@ -38,7 +38,7 @@ open class SignatureInsertHandler(val sig: IFunSignature, private val isColonSty
 
     private val myParams: Array<LuaParamInfo> by lazy {
         val list = mutableListOf<LuaParamInfo>()
-        sig.processArgs(null, if (replaceDot) true else isColonStyle) { _, param ->
+        sig.processArgs(null, if (replaceDot) true else isColonStyle, false) { _, param ->
             list.add(param)
         }
         list.toTypedArray()
@@ -87,7 +87,7 @@ class CSSignatureInsertHandler(val sig: IFunSignature, private val isColonStyle:
     private var protoName = "CS_XXX"
     private val myParams: Array<LuaParamInfo> by lazy {
         val list = mutableListOf<LuaParamInfo>()
-        sig.processArgs(null, isColonStyle) { _, param ->
+        sig.processArgs(null, isColonStyle, false) { _, param ->
             list.add(param)
         }
         list.toTypedArray()

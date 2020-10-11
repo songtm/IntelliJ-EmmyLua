@@ -42,10 +42,10 @@ fun IFunSignature.processArgs(callExpr: LuaCallExpr, processor: (index:Int, para
     val thisTy = if (expr is LuaIndexExpr) {
         expr.guessType(SearchContext.get(expr.project))
     } else null
-    processArgs(thisTy, callExpr.isMethodColonCall, processor)
+    processArgs(thisTy, callExpr.isMethodColonCall, false, processor)
 }
 
-fun IFunSignature.processArgs(thisTy: ITy?, colonStyle: Boolean, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
+fun IFunSignature.processArgs(thisTy: ITy?, colonStyle: Boolean, processVarg : Boolean, processor: (index:Int, param: LuaParamInfo) -> Boolean) {
     var index = 0
     var pIndex = 0
     if (colonStyle && !colonCall) {
@@ -63,6 +63,10 @@ fun IFunSignature.processArgs(thisTy: ITy?, colonStyle: Boolean, processor: (ind
         for (param in appendVargsMember!!.params) {
             if (!processor(index++, param)) return
         }
+    }
+    else if (processVarg)
+    {
+        if (!processor(index++, LuaParamInfo("...", Ty.UNKNOWN))) return
     }
 }
 

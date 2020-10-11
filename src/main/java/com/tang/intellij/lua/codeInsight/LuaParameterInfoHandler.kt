@@ -65,7 +65,7 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
             TyUnion.each(type) { ty ->
                 if (ty is ITyFunction) {
                     ty.process(Processor {
-                        if ((it.colonCall && !isColonStyle) || it.params.isNotEmpty()) {
+                        if ((it.colonCall && !isColonStyle) || it.params.isNotEmpty() || it.hasVarargs()) {
                             list.add(ParameterInfoType(it, isColonStyle))
                         }
                         true
@@ -149,14 +149,19 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
         var start = 0
         var end = 0
         val str = buildString {
-            o.sig.processArgs(null, o.isColonStyle) { idx, pi ->
+            o.sig.processArgs(null, o.isColonStyle, true) { idx, pi ->
                 if (idx > 0) append(", ")
                 if (idx == index) start = length
+                if (index > idx && pi.name == "...") start = length
                 append(pi.name)
                 append(":")
                 append(pi.ty.displayName)
                 if (idx == index) end = length
+                if (index > idx && pi.name == "...") end = length
                 true
+            }
+            if (o.sig.hasVarargs()) {
+
             }
         }
         if (str.isNotEmpty()) {

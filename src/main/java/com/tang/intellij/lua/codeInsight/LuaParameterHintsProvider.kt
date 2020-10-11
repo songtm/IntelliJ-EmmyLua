@@ -71,7 +71,7 @@ class LuaParameterHintsProvider : InlayParameterHintsProvider {
             val isInstanceMethodUsedAsStaticMethod = ty.isColonCall && callExpr.isMethodDotCall
             val sig = ty.findPerfectSignature(callExpr)
 
-            sig.processArgs(null, callExpr.isMethodColonCall) { index, paramInfo ->
+            sig.processArgs(null, callExpr.isMethodColonCall, false) { index, paramInfo ->
                 val expr = exprList.getOrNull(index) ?: return@processArgs false
                 val show =
                 if (index == 0 && isInstanceMethodUsedAsStaticMethod) {
