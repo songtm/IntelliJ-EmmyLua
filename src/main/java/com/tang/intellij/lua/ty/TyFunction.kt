@@ -64,7 +64,7 @@ fun IFunSignature.processArgs(thisTy: ITy?, colonStyle: Boolean, processVarg : B
             if (!processor(index++, param)) return
         }
     }
-    else if (processVarg)
+    else if (processVarg && hasVarargs())
     {
         if (!processor(index++, LuaParamInfo("...", Ty.UNKNOWN))) return
     }
