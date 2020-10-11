@@ -284,11 +284,12 @@ private fun getType(context: SearchContext, def: PsiElement): ITy {
                 }
             }
 
-            //Global
-            if (isGlobal(def) && type !is ITyPrimitive) {
-                //use globalClassTy to store class members, that's very important
-                type = type.union(TyClass.createGlobalType(def, context.forStub))
-            }
+            //songtm注释 避免了生成一堆type union, 也提高了性能?2020年9月30日
+//            //Global
+//            if (isGlobal(def) && type !is ITyPrimitive) {
+//                //use globalClassTy to store class members, that's very important
+//                type = type.union(TyClass.createGlobalType(def, context.forStub))
+//            }
             return type
         }
         is LuaTypeGuessable -> return def.guessType(context)
