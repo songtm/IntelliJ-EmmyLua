@@ -308,6 +308,19 @@ fun getName(indexExpr: LuaIndexExpr): String? {
     if (idExpr != null)
         return LuaString.getContent(idExpr.text).value
 
+    //songtm 2020年10月11日  实验self["c_subxxx"..i]类型推导为self.c_subxxx1
+    val bracket = indexExpr.lbrack
+    if (bracket != null) {
+        val nextLeaf = PsiTreeUtil.getNextSiblingOfType(bracket, LuaExpr::class.java)
+        if (nextLeaf is LuaBinaryExpr && nextLeaf.firstChild is LuaLiteralExpr && indexExpr.firstChild.text == "self"
+                &&(nextLeaf.firstChild as LuaLiteralExpr).kind == LuaLiteralKind.String)
+        {
+            val res =  LuaString.getContent(nextLeaf.firstChild.text).value + "1"
+            return if (res.startsWith("c_")) res else null
+        }
+    }
+    //
+
     return null
 }
 
