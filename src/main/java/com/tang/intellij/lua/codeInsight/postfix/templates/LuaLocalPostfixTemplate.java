@@ -17,6 +17,7 @@
 package com.tang.intellij.lua.codeInsight.postfix.templates;
 
 import com.intellij.codeInsight.template.postfix.templates.PostfixTemplateWithExpressionSelector;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.psi.PsiElement;
 import com.tang.intellij.lua.psi.LuaExpr;
@@ -47,6 +48,13 @@ public class LuaLocalPostfixTemplate extends PostfixTemplateWithExpressionSelect
             LuaIntroducePBEventHandler handler = new LuaIntroducePBEventHandler();
             String funcname = text.substring(7, 8).toUpperCase() + text.substring(8, text.length());
             handler.invoke(editor.getProject(), editor, (LuaExpr) psiElement, "var", "get"+funcname);
+        }
+        else if (text.matches("self\\.c_\\w+\\d$")){ //self.c_subxxx -> self["c_subxxx"..i]
+            Document document = editor.getDocument();
+            int offset = psiElement.getTextOffset();
+            String newStr = "[\""+text.substring(5, text.length() - 1)+"\" .. ]";
+            document.replaceString(offset - 1, offset + text.length()-5, newStr);
+            editor.getCaretModel().moveToOffset(offset + newStr.length() - 2);
         }
         else if (text.length() > 4 && text.substring(0, 3).equals("SC_") ) {
             LuaIntroducePBEventHandler handler = new LuaIntroducePBEventHandler();
