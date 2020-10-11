@@ -16,8 +16,10 @@
 
 package com.tang.intellij.lua.editor.completion
 
+import com.intellij.codeInsight.AutoPopupController
 import com.intellij.codeInsight.completion.CompletionInitializationContext
 import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.completion.InsertHandler
 import com.intellij.codeInsight.completion.PrefixMatcher
 import com.intellij.codeInsight.completion.PrioritizedLookupElement
 import com.intellij.codeInsight.lookup.LookupElement
@@ -70,6 +72,23 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
                 {
                     val ele = LookupElementBuilder.create(LuaSettings.instance.superRefName).withTailText("  [super class]")
                             .withIcon(LuaIcons.CLASS).withTypeText(superClass.displayName)
+                    completionResultSet.addElement(ele)
+                }
+                else if (isNameExpr && (indexExpr.firstChild as LuaNameExprImpl).name == prefixType.displayName)
+                {
+                    val replaceStr = "._.ctor()"
+                    val txt = prefixType.displayName + replaceStr
+                    val ele = LookupElementBuilder.create("new").withTailText("  $txt")
+                            .withIcon(LuaIcons.CLASS).withTypeText(prefixType.displayName)
+                            .withInsertHandler(InsertHandler<LookupElement> { insertionContext, lookupElement ->
+                                val startOffset = insertionContext.startOffset
+                                val element = insertionContext.file.findElementAt(startOffset)
+                                val editor = insertionContext.editor
+                                insertionContext.document.replaceString(startOffset - 1, startOffset + 3, replaceStr)
+                                editor.caretModel.moveToOffset(startOffset + replaceStr.length - 2)
+                                AutoPopupController.getInstance(insertionContext.project).autoPopupParameterInfo(editor, element)
+                            })
+
                     completionResultSet.addElement(ele)
                 }
             }
