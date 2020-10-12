@@ -29,6 +29,7 @@ import com.intellij.psi.PsiFile
 import com.tang.intellij.lua.editor.structure.LuaClassFieldElement
 import com.tang.intellij.lua.editor.structure.LuaFileElement
 import com.tang.intellij.lua.editor.structure.LuaFuncElement
+import com.tang.intellij.lua.psi.LuaClassMember
 import com.tang.intellij.lua.psi.LuaPsiFile
 
 /**
@@ -48,7 +49,7 @@ class LuaStructureViewFactory : PsiStructureViewFactory {
     inner class LuaStructureViewModel(psiFile: PsiFile) : StructureViewModelBase(psiFile, LuaFileElement(psiFile as LuaPsiFile)), StructureViewModel.ElementInfoProvider {
 
         init {
-            withSorters(LuaAlphaSorter())
+            withSorters(LuaAlphaSorter(), LuaVisibilitySorter())
         }
 
         override fun isAlwaysShowsPlus(structureViewTreeElement: StructureViewTreeElement): Boolean {
@@ -86,6 +87,34 @@ class LuaStructureViewFactory : PsiStructureViewFactory {
 
         override fun getName(): String {
             return "Alpha Sorter"
+        }
+    }
+
+    inner class LuaVisibilitySorter : Sorter {
+
+        override fun getComparator() = kotlin.Comparator<Any> { o1, o2 ->
+            if (o1 is LuaFuncElement && o2 is LuaFuncElement) {
+                if (o1.element is LuaClassMember && o2.element is LuaClassMember) {
+                    if (o1.element.visibility.bitMask > o2.element.visibility.bitMask)
+                        return@Comparator 1
+                    if (o1.element.visibility.bitMask < o2.element.visibility.bitMask)
+                        return@Comparator -1
+                }
+            }
+
+            return@Comparator 0
+        }
+
+        override fun isVisible(): Boolean {
+            return true
+        }
+
+        override fun getPresentation(): ActionPresentation {
+            return ActionPresentationData("Sort by access level", "Sort by access level", AllIcons.ObjectBrowser.VisibilitySort)
+        }
+
+        override fun getName(): String {
+            return "AccessLevel Sorter"
         }
     }
 }
