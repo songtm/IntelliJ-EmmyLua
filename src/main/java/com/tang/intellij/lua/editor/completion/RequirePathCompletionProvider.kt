@@ -91,7 +91,7 @@ class RequirePathCompletionProvider : LuaCompletionProvider() {
 
                 val lookupString = lookupElement.lookupString
                 insertionContext.document.insertString(start + ls.start, lookupString)
-                insertionContext.editor.caretModel.moveToOffset(start + ls.start + lookupString.length)
+                insertionContext.editor.caretModel.moveToOffset(start + ls.start + lookupString.length + 2)
             }
         }
     }
