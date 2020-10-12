@@ -24,8 +24,8 @@ import javax.swing.Icon
 
 enum class Visibility(val text: String, val icon: Icon, val bitMask: Int) {
     PUBLIC("public", LuaIcons.PUBLIC, 0x1),
-    PRIVATE("private", LuaIcons.PRIVATE, 0x2),
-    PROTECTED("protected", LuaIcons.PROTECTED, 0x4);
+    PRIVATE("private", LuaIcons.PRIVATE, 0x4),
+    PROTECTED("protected", LuaIcons.PROTECTED, 0x2);
 
     override fun toString() = text
 
