@@ -282,6 +282,11 @@ private fun getType(context: SearchContext, def: PsiElement): ITy {
                         }
                     }
                 }
+                //songtm UnityEngine.GameObject不提示的问题!
+                if (isGlobal(def) && type !is ITyPrimitive) {//songtm 全局非基本类型(bool, string, table...)
+                    //use globalClassTy to store class members, that's very important
+                    type = type.union(TyClass.createGlobalType(def, context.forStub))
+                }
             }
 
             //songtm注释 避免了生成一堆type union, 也提高了性能?2020年9月30日
