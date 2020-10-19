@@ -60,7 +60,7 @@ open class ClassMemberCompletionProvider : LuaCompletionProvider() {
         if (indexExpr is LuaIndexExpr) {
             val isColon = indexExpr.colon != null
             val project = indexExpr.project
-            val contextTy = LuaPsiTreeUtil.findContextClass(indexExpr)
+            val contextTy = LuaPsiTreeUtil.findContextClass(indexExpr.realContext)
             val context = SearchContext.get(project)
             val prefixType = indexExpr.guessParentType(context)
 
