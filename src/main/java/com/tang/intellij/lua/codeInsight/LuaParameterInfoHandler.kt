@@ -20,6 +20,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.lang.parameterInfo.*
 import com.intellij.psi.util.PsiTreeUtil
 import com.intellij.util.Processor
+import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaCallExprImpl
 import com.tang.intellij.lua.psi.impl.LuaIndexExprImpl
@@ -127,6 +128,15 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
             {
                 clsName = (callExp.firstChild as LuaIndexExprImpl).guessParentType(searchContext).toString()
                 val memName: String? = (callExp.firstChild as LuaIndexExprImpl).id?.text
+                var clsnames = clsName.split("|")
+
+                for (unionCls in clsnames) {
+                    if (appendVargsmap.containsKey(unionCls))
+                    {
+                        clsName = unionCls
+                        break
+                    }
+                }
                 shouldAdd = (appendVargsmap.containsKey(clsName) && memName != null && appendVargsmap[clsName]!!.first == memName)
             }
             if (shouldAdd)
@@ -181,7 +191,7 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
     {
         var appendVargsmap:MutableMap<String, Pair<String, String>> =  emptyMap<String, Pair<String, String>>().toMutableMap()
         init {
-            val str = "UIManager|push|init;pushUI|init"
+            val str = LuaSettings.instance.appendVargs
             var split = str.split(";")
             for (s in split) {
                 var split1 = s.split("|")
