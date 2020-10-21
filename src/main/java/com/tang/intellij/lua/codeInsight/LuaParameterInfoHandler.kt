@@ -27,7 +27,6 @@ import com.tang.intellij.lua.psi.impl.LuaIndexExprImpl
 import com.tang.intellij.lua.psi.impl.LuaListArgsImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
-import groovy.lang.Tuple
 
 data class ParameterInfoType(val sig: IFunSignature, val isColonStyle: Boolean)
 
@@ -119,35 +118,35 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
             val searchContext = SearchContext.get(context.parameterOwner.project)
             val callExp = context.parameterOwner.parent as LuaCallExprImpl
             var shouldAdd = false
-            var clsName = ""
+            var mfuncName = ""
             if (callExp.isFunctionCall)
             {
-                clsName = callExp.firstChild.text//全局函数
-                shouldAdd = appendVargsmap.containsKey(clsName)
+                mfuncName = callExp.firstChild.text//全局函数
+                shouldAdd = appendVargsmap.containsKey(mfuncName)
             }
             else if (callExp.isMethodColonCall || callExp.isMethodDotCall)
             {
-                clsName = (callExp.firstChild as LuaIndexExprImpl).guessParentType(searchContext).toString()
+                val unionClsName = (callExp.firstChild as LuaIndexExprImpl).guessParentType(searchContext).toString()
                 val memName: String? = (callExp.firstChild as LuaIndexExprImpl).id?.text
-                var clsnames = clsName.split("|")
+                var clsnames = unionClsName.split("|")
 
-                for (unionCls in clsnames) {
-                    if (appendVargsmap.containsKey(unionCls))
+                for (eachClsName in clsnames) {
+                    if (appendVargsmap.containsKey("$eachClsName:$memName"))
                     {
-                        clsName = unionCls
+                        mfuncName = "$eachClsName:$memName"
                         break
                     }
                 }
-                shouldAdd = (appendVargsmap.containsKey(clsName) && memName != null && appendVargsmap[clsName]!!.first == memName)
+                shouldAdd = appendVargsmap.containsKey(mfuncName)
             }
             if (shouldAdd)
             {
-                val typeParamIndex = appendVargsmap[clsName]!!.second
+                val typeParamIndex = appendVargsmap[mfuncName]!!.first
                 if (typeParamIndex < exprList.size) {
-                    var luaExpr: LuaExpr = exprList[appendVargsmap[clsName]!!.second]
+                    var luaExpr: LuaExpr = exprList[typeParamIndex]
                     var guessType: ITy = luaExpr.guessType(searchContext)
                     if (guessType is TyClass) {
-                        var findMember: LuaClassMember? = guessType.findMember(appendVargsmap[clsName]!!.third, searchContext)
+                        var findMember: LuaClassMember? = guessType.findMember(appendVargsmap[mfuncName]!!.second, searchContext)
                         if (findMember != null && findMember is LuaClassMethodDef) {
                             o.sig.appendVargsMember = findMember
                         }
@@ -191,16 +190,14 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
 
     companion object
     {
-        var appendVargsmap:MutableMap<String, Triple<String, Int, String> > =  emptyMap<String, Triple<String, Int, String>>().toMutableMap()
+        var appendVargsmap:MutableMap<String, Pair<Int, String> > =  emptyMap<String, Pair<Int, String>>().toMutableMap()
         init {
-            val str = LuaSettings.instance.appendVargs //"UIManager|push|1|init;pushUI|1|init" //key:类名/函数名 val:methodfun, methodfun第几个参数, 转到的函数名
+            val str = LuaSettings.instance.appendVargs //"UIManager:push|1|init;pushUI|1|init"
             var split = str.split(";")
             for (s in split) {
                 var split1 = s.split("|")
                 if (split1.size == 3)
-                    appendVargsmap[split1[0]] = Triple("songtmhahaha", split1[1].toInt(),  split1[2])
-                if (split1.size == 4)
-                    appendVargsmap[split1[0]] = Triple(split1[1], split1[2].toInt(), split1[3])
+                    appendVargsmap[split1[0]] = Pair(split1[1].toInt(),  split1[2])
             }
         }
     }
