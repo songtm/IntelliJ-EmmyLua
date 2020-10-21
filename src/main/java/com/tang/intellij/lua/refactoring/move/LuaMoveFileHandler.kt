@@ -27,6 +27,7 @@ import com.intellij.usageView.UsageInfo
 import com.tang.intellij.lua.psi.LuaPsiFile
 import com.tang.intellij.lua.psi.LuaFileUtil
 import com.tang.intellij.lua.reference.LuaRequireReference
+import java.io.File
 import java.util.*
 
 class LuaMoveFileHandler : MoveFileHandler() {
@@ -39,7 +40,12 @@ class LuaMoveFileHandler : MoveFileHandler() {
     }
 
     override fun prepareMovedFile(file: PsiFile, moveDestination: PsiDirectory, oldToNewMap: MutableMap<PsiElement, PsiElement>?) {
-
+        if (file is LuaPsiFile) {
+            val metaFile = File((file as LuaPsiFile).virtualFile.path + ".meta")
+            if (metaFile.exists()) {
+                metaFile.renameTo(File(moveDestination.virtualFile.path + "/" + metaFile.name))
+            }
+        }
     }
 
     override fun findUsages(file: PsiFile, newParent: PsiDirectory, searchInComments: Boolean, searchInNonJavaFiles: Boolean): MutableList<UsageInfo> {
