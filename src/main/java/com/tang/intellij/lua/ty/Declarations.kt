@@ -124,7 +124,9 @@ private fun LuaNameDef.infer(context: SearchContext): ITy {
             type = infer(expr, context)
     } else {
         val docTy = this.docTy
-        if (docTy != null)
+        //songtm 2020年10月21日 支持---@type table<UnionDefinition, GameManager> local m = { x = {a = 1}}
+        //就可以 m.x和 m["xxx"].都有提示了
+        if (docTy != null && !docTy.displayName.startsWith("table<UnionDefinition"))
             return docTy
 
         val localDef = PsiTreeUtil.getParentOfType(this, LuaLocalDef::class.java)
@@ -137,6 +139,8 @@ private fun LuaNameDef.infer(context: SearchContext): ITy {
                     type = context.withIndex(localDef.getIndexFor(this)) {
                         exprList.guessTypeAt(context)
                     }
+                    if (docTy != null)
+                        type = type.union(docTy)
                 }
             }
 //songtm注释 避免了生成一堆type union, 也提高了性能?2020年9月30日
