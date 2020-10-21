@@ -27,6 +27,7 @@ import com.tang.intellij.lua.psi.impl.LuaIndexExprImpl
 import com.tang.intellij.lua.psi.impl.LuaListArgsImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.*
+import groovy.lang.Tuple
 
 data class ParameterInfoType(val sig: IFunSignature, val isColonStyle: Boolean)
 
@@ -141,14 +142,15 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
             }
             if (shouldAdd)
             {
-                var luaExpr: LuaExpr = exprList[0]
-                var guessType: ITy = luaExpr.guessType(searchContext)
-                if (guessType is TyClass)
-                {
-                    var findMember: LuaClassMember? = guessType.findMember(appendVargsmap[clsName]!!.second, searchContext)
-                    if (findMember != null && findMember is LuaClassMethodDef)
-                    {
-                        o.sig.appendVargsMember = findMember
+                val typeParamIndex = appendVargsmap[clsName]!!.second
+                if (typeParamIndex < exprList.size) {
+                    var luaExpr: LuaExpr = exprList[appendVargsmap[clsName]!!.second]
+                    var guessType: ITy = luaExpr.guessType(searchContext)
+                    if (guessType is TyClass) {
+                        var findMember: LuaClassMember? = guessType.findMember(appendVargsmap[clsName]!!.third, searchContext)
+                        if (findMember != null && findMember is LuaClassMethodDef) {
+                            o.sig.appendVargsMember = findMember
+                        }
                     }
                 }
             }
@@ -189,16 +191,16 @@ class LuaParameterInfoHandler : ParameterInfoHandler<LuaArgs, ParameterInfoType>
 
     companion object
     {
-        var appendVargsmap:MutableMap<String, Pair<String, String>> =  emptyMap<String, Pair<String, String>>().toMutableMap()
+        var appendVargsmap:MutableMap<String, Triple<String, Int, String> > =  emptyMap<String, Triple<String, Int, String>>().toMutableMap()
         init {
-            val str = LuaSettings.instance.appendVargs
+            val str = LuaSettings.instance.appendVargs //"UIManager|push|1|init;pushUI|1|init" //key:类名/函数名 val:methodfun, methodfun第几个参数, 转到的函数名
             var split = str.split(";")
             for (s in split) {
                 var split1 = s.split("|")
-                if (split1.size == 2)
-                    appendVargsmap[split1[0]] = Pair("songtmhahaha", split1[1])
                 if (split1.size == 3)
-                    appendVargsmap[split1[0]] = Pair(split1[1], split1[2])
+                    appendVargsmap[split1[0]] = Triple("songtmhahaha", split1[1].toInt(),  split1[2])
+                if (split1.size == 4)
+                    appendVargsmap[split1[0]] = Triple(split1[1], split1[2].toInt(), split1[3])
             }
         }
     }
