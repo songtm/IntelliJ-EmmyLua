@@ -112,5 +112,3 @@ function table.sort(list, comp) end
 ---@param j number
 ---@return any
 function table.unpack(list, i, j) end
-
-return table

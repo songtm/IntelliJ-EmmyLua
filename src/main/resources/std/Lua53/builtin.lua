@@ -93,7 +93,7 @@
 --- if you write `a[2.0] = true`, the actual key inserted into the table will
 --- be the integer `2`. (On the other hand, 2 and "`2`" are different Lua 
 --- values and therefore denote different table entries.)
----@class table
+---@classnotthisone table
 
 ---
 --- Any of the above Built-in Types.
