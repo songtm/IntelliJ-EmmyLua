@@ -64,11 +64,13 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
     private JTextField superRefName;
     private JCheckBox autoInsertParameters;
     private JTextField appendVargs;
+    private JTextField fileSkipPattern;
 
     public LuaSettingsPanel(LuaSettings settings) {
         this.settings = settings;
         reverseServer.setText(settings.getReverseServer());
         superRefName.setText(settings.getSuperRefName());
+        fileSkipPattern.setText(settings.getFileSkipPattern());
         appendVargs.setText(settings.getAppendVargs());
         constructorNames.setText(settings.getConstructorNamesString());
         strictDoc.setSelected(settings.isStrictDoc());
@@ -124,6 +126,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
                 !StringUtil.equals(settings.getRequireLikeFunctionNamesString(), requireFunctionNames.getText()) ||
                 !StringUtil.equals(settings.getReverseServer(), reverseServer.getText()) ||
                 !StringUtil.equals(settings.getSuperRefName(), superRefName.getText()) ||
+                !StringUtil.equals(settings.getFileSkipPattern(), fileSkipPattern.getText()) ||
                 !StringUtil.equals(settings.getAppendVargs(), appendVargs.getText()) ||
                 settings.getDotAsColon() != dotAsColon.isSelected() ||
                 settings.getAutoProtectedMember() != autoProtectedClassMember.isSelected() ||
@@ -150,6 +153,7 @@ public class LuaSettingsPanel implements SearchableConfigurable, Configurable.No
         settings.setReverseServer(reverseServerText);
         reverseServer.setText(settings.getReverseServer());
         settings.setSuperRefName(superRefName.getText().trim());
+        settings.setFileSkipPattern(fileSkipPattern.getText().trim());
         settings.setAppendVargs(appendVargs.getText().trim());
 
         settings.setDotAsColon(dotAsColon.isSelected());

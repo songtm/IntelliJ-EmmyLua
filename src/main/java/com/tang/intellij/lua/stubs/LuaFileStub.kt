@@ -57,17 +57,18 @@ class LuaFileElementType : IStubFileElementType<LuaFileStub>(LuaLanguage.INSTANC
         return object : DefaultStubBuilder() {
 
             private var isTooLarger = false
-
+            private var skipThisFile = false
             override fun createStubForFile(file: PsiFile): StubElement<*> {
                 if (file is LuaPsiFile){
                     isTooLarger = file.tooLarger
+                    skipThisFile = file.matchSkipPattern
                     return LuaFileStub(file, file.moduleName)
                 }
                 return super.createStubForFile(file)
             }
 
             override fun skipChildProcessingWhenBuildingStubs(parent: ASTNode, node: ASTNode): Boolean {
-                return isTooLarger
+                return isTooLarger || skipThisFile
             }
         }
     }

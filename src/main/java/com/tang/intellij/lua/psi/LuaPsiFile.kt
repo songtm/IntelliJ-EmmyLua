@@ -47,7 +47,14 @@ open class LuaPsiFile(fileViewProvider: FileViewProvider) : PsiFileBase(fileView
         val fileSize = viewProvider.virtualFile.length
         return fileSize > fileLimit
     }
-
+    val matchSkipPattern : Boolean get() {
+        val pattern = LuaSettings.instance.fileSkipPattern
+        if (pattern != "" && viewProvider.virtualFile.path.matches(pattern.toRegex()))
+        {
+            return true
+        }
+        return false
+    }
     override fun setName(name: String): PsiElement {
         return if (FileUtil.getNameWithoutExtension(name) == name) {
             super.setName("$name.${LuaFileType.INSTANCE.defaultExtension}")

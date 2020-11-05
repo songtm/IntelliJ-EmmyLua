@@ -33,5 +33,10 @@ class LargerFileAnnotator : Annotator {
                     "The file size ($fileSize) exceeds configured limit ($fileLimit). Code insight features are not available."
             ).isFileLevelAnnotation = true
         }
+        else if (psiElement is LuaPsiFile && psiElement.matchSkipPattern) {
+            annotationHolder.createWarningAnnotation(psiElement,
+                    "matched skip patten hahaha. Code insight features are not available."
+            ).isFileLevelAnnotation = true
+        }
     }
 }
