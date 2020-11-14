@@ -18,6 +18,7 @@ package com.tang.intellij.lua.editor.completion
 
 import com.intellij.codeInsight.completion.CompletionParameters
 import com.intellij.codeInsight.completion.CompletionResultSet
+import com.intellij.codeInsight.completion.InsertionContext
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.codeInsight.template.Template
 import com.intellij.codeInsight.template.TemplateManager
@@ -83,8 +84,8 @@ class OverrideCompletionProvider : LuaCompletionProvider() {
 
         override val autoInsertParameters = true
 
-        override fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>): Template {
-            val template = super.createTemplate(manager, paramNameDefList)
+        override fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>, insertionContext: InsertionContext): Template {
+            val template = super.createTemplate(manager, paramNameDefList, insertionContext)
             template.addEndVariable()
             template.addTextSegment("\nend")
             return template

@@ -97,7 +97,7 @@ abstract class ArgsInsertHandler : InsertHandler<LookupElement> {
         if (autoInsertParameters) {
             val paramNameDefList = getParams()
             val manager = TemplateManager.getInstance(insertionContext.project)
-            val template = createTemplate(manager, paramNameDefList)
+            val template = createTemplate(manager, paramNameDefList, insertionContext)
             editor.caretModel.moveToOffset(insertionContext.selectionEndOffset)
             manager.startTemplate(editor, template)
             if (paramNameDefList.isEmpty() && isVarargs) editor.caretModel.moveToOffset(insertionContext.selectionEndOffset - 1)
@@ -125,7 +125,7 @@ abstract class ArgsInsertHandler : InsertHandler<LookupElement> {
         return expr
     }
 
-    protected open fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>): Template {
+    protected open fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>, insertionContext: InsertionContext): Template {
         val template = manager.createTemplate("", "")
         template.addTextSegment("(")
 

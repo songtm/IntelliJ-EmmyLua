@@ -26,12 +26,12 @@ import com.intellij.codeInsight.template.macro.CompleteMacro
 import com.intellij.openapi.editor.Editor
 import com.intellij.psi.PsiElement
 import com.tang.intellij.lua.actions.KeyboardState
-import com.tang.intellij.lua.project.LuaSettings
 import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.ty.IFunSignature
 import com.tang.intellij.lua.ty.hasVarargs
 import com.tang.intellij.lua.ty.processArgs
 import com.intellij.codeInsight.template.Template
+import com.intellij.psi.util.PsiTreeUtil
 
 open class SignatureInsertHandler(val sig: IFunSignature, private val isColonStyle: Boolean = false) : ArgsInsertHandler() {
     var replaceDot = false
@@ -102,7 +102,7 @@ class CSSignatureInsertHandler(val sig: IFunSignature, private val isColonStyle:
         insertionContext.document.deleteString(insertionContext.startOffset - 3, insertionContext.startOffset + protoName.length)
     }
 
-    override fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>): Template {
+    override fun createTemplate(manager: TemplateManager, paramNameDefList: Array<LuaParamInfo>, insertionContext: InsertionContext): Template {
 
         val template = manager.createTemplate("", "") //key, group
         template.addTextSegment("PROTOSEND($protoName, {")
@@ -118,8 +118,34 @@ class CSSignatureInsertHandler(val sig: IFunSignature, private val isColonStyle:
             template.addVariable(paramNameDef.name, completion, TextExpression(paramNameDef.ty.displayName), true)
             isFirst = false
         }
-        template.addTextSegment("})")
+        if (KeyboardState.shiftDown)
+        {
+            template.addTextSegment("})")
+        }
+        else
+        {
+            val scProto = "SC" + protoName.substring(2)
+            template.addTextSegment("}, $scProto" + ", self, self.${scProto.toLowerCase()})")
+            genSCFunc(insertionContext, scProto.toLowerCase())
+        }
+
         return template
+    }
+    fun genSCFunc(insertionContext: InsertionContext, funName:String) {
+        val startOffset = insertionContext.startOffset
+        val element = insertionContext.file.findElementAt(startOffset)
+        if (element != null)
+        {
+            val context = PsiTreeUtil.findFirstParent(element) { it is LuaClassMethodDef }
+            val clsdef = context as? LuaClassMethodDef
+            if (clsdef != null) {
+                val comment = "\n---@param data $funName"
+                val callbackFun = LuaElementFactory.createWith(insertionContext.project,
+                        comment+"\nfunction " + clsdef.classMethodName.expr.text + ":" + funName + "(data)\n\tdump(data)\nend")
+                clsdef.parent.addAfter(callbackFun.parent, clsdef)
+            }
+        }
+
     }
 }
 
