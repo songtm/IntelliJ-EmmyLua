@@ -21,6 +21,7 @@ import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.psi.tree.IElementType
 import com.tang.intellij.lua.Constants
+import com.tang.intellij.lua.actions.KeyboardState
 import com.tang.intellij.lua.comment.psi.impl.LuaDocTagFieldImpl
 import com.tang.intellij.lua.psi.LuaClassField
 import com.tang.intellij.lua.psi.LuaClassMember
@@ -106,12 +107,31 @@ class LookupElementFactory {
                                      bold: Boolean): LuaLookupElement {
             val element = LuaFieldLookupElement(name, field, type, bold)
             if (!name.startsWith("self.") && !LuaRefactoringUtil.isLuaIdentifier(name)) {
-                element.lookupString = "['$name']"
+                element.lookupString = "['$name']" //不符合变量名规则的 添加括号tab['0abc']
                 val baseHandler = element.handler
                 element.handler = InsertHandler<LookupElement> { insertionContext, lookupElement ->
                     baseHandler.handleInsert(insertionContext, lookupElement)
                     // remove '.'
                     insertionContext.document.deleteString(insertionContext.startOffset - 1, insertionContext.startOffset)
+                }
+            }
+            else{
+                val baseHandler = element.handler
+                element.handler = InsertHandler<LookupElement> { context, lookupElement ->
+                    baseHandler.handleInsert(context, lookupElement)
+                    if (KeyboardState.shiftDown)
+                    {
+                        var after = name.replace(Regex("""(c_\w+)\d+"""), "\$1") ////self.c_subxxx -> self["c_subxxx"..i]
+                        if (after != name) {
+                            var start = context.startOffset - 1
+                            if (name.startsWith("self.")) {
+                                start = context.startOffset + 4
+                                after = after.substring(5)
+                            }
+                            context.document.replaceString(start, context.tailOffset, "[\"$after\" .. ]")
+                            context.editor.caretModel.moveToOffset(context.tailOffset - 1)
+                        }
+                    }
                 }
             }
 
