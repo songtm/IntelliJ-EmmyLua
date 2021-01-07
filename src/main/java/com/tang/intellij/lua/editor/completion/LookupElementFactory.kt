@@ -128,8 +128,9 @@ class LookupElementFactory {
                                 start = context.startOffset + 4
                                 after = after.substring(5)
                             }
-                            context.document.replaceString(start, context.tailOffset, "[\"$after\" .. ]")
-                            context.editor.caretModel.moveToOffset(context.tailOffset - 1)
+                            context.document.replaceString(start, context.tailOffset, "[\"$after\" .. i]")
+                            context.editor.caretModel.currentCaret.setSelection(context.tailOffset - 2, context.tailOffset - 1)
+                            context.editor.caretModel.currentCaret.moveToOffset(context.tailOffset - 1)
                         }
                     }
                 }
