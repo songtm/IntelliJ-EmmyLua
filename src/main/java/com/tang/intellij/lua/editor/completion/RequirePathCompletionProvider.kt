@@ -22,6 +22,7 @@ import com.intellij.codeInsight.lookup.LookupElementBuilder
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
+import com.tang.intellij.lua.actions.KeyboardState
 import com.tang.intellij.lua.lang.LuaFileType
 import com.tang.intellij.lua.lang.LuaIcons
 import com.tang.intellij.lua.lang.type.LuaString
@@ -92,6 +93,14 @@ class RequirePathCompletionProvider : LuaCompletionProvider() {
                 val lookupString = lookupElement.lookupString
                 insertionContext.document.insertString(start + ls.start, lookupString)
                 insertionContext.editor.caretModel.moveToOffset(start + ls.start + lookupString.length + 2)
+                if (KeyboardState.shiftDown)
+                {
+                    val mode = lookupString.split(".").last()
+                    val offset = cur.parent.parent.parent.textOffset
+                    insertionContext.document.insertString(offset, "local $mode = ")
+                    insertionContext.editor.caretModel.moveToOffset(offset + 6 + mode.length)
+                    insertionContext.editor.caretModel.currentCaret.setSelection(offset + 6, offset + 6 + mode.length)
+                }
             }
         }
     }
