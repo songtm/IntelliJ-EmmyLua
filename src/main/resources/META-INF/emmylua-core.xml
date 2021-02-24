@@ -181,6 +181,11 @@
         <!--intentions-->
         <intentionAction>
             <category>Lua</category>
+            <className>com.tang.intellij.lua.codeInsight.intention.SCErrorConfigIntention</className>
+            <descriptionDirectoryName>SCErrorConfigIntention</descriptionDirectoryName>
+        </intentionAction>
+        <intentionAction>
+            <category>Lua</category>
             <className>com.tang.intellij.lua.codeInsight.intention.CreateParameterAnnotationIntention</className>
             <descriptionDirectoryName>CreateParameterAnnotationIntention</descriptionDirectoryName>
         </intentionAction>
