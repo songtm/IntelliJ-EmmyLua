@@ -26,7 +26,8 @@ class LuaPrevSiblingClassNameMacro : Macro() {
                 val cls = PsiTreeUtil.findChildOfType(e, LuaDocTagClass::class.java)
                 if (cls != null)
                 {
-                    return TextResult(cls.name)
+                    return TextResult(e.nameList?.text ?: "")
+//                    return TextResult(cls.name)
                 }
             }
             if (e is LuaClassMethodDef)
