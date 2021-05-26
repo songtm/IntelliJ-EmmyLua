@@ -107,24 +107,31 @@ class LuaRTable(name: String) : LuaRValue(name) {
                     if (table != null) {
                         var scoreMap: MutableMap<LuaValue, Int> = HashMap()
                         val keys = table.keys()
-                        keys.forEachIndexed { index, luaValue ->
-                            var score = 0
-                            val tabval = table.get(luaValue)
-                            val valtype = tabval.typename()
-                            val istab = valtype == "table"
-                            score += when {
-                                luaValue.toString() == unityComName -> 24000
-                                istab && tabval.get(usertypeName) != LuaValue.NIL -> 12000
-                                istab -> 6000
-                                valtype == "string" -> 3000
-                                valtype == "boolean" -> 2000
-                                valtype == "number" -> 1000
-                                else -> 0
-                            }
-                            score += -index //原始顺序
-                            scoreMap[luaValue] = -score
-                        }
-                        keys.sortBy { scoreMap[it] }
+//                        keys.forEachIndexed { index, luaValue ->
+//                            var score = 0
+//                            val tabval = table.get(luaValue)
+//                            val valtype = tabval.typename()
+//                            val istab = valtype == "table"
+//                            score += when {
+//                                luaValue.toString() == unityComName -> 24000
+//                                istab && tabval.get(usertypeName) != LuaValue.NIL -> 12000
+//                                istab -> 6000
+//                                valtype == "string" -> 3000
+//                                valtype == "boolean" -> 2000
+//                                valtype == "number" -> 1000
+//                                else -> 0
+//                            }
+//                            score += -index //原始顺序
+//                            scoreMap[luaValue] = -score
+//                        }
+//                        keys.sortBy { scoreMap[it] }
+
+                        keys.sortWith(compareBy(
+                                { if (it.isnumber()) it.toint() else 0  },
+                                { if (it.isstring()) it.toString() else ""},
+                                { if (it.isboolean()) it.toboolean() else false}
+                        ))
+
                         for (key in keys) {
                             if (key.toString() == usertypeName) continue
                             val value = LuaRValue.create(key.toString(), table.get(key), "", session)
