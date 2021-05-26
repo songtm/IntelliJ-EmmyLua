@@ -27,7 +27,7 @@ import java.util.*
  *
  * Created by tangzx on 2017/4/16.
  */
-class LuaRTable(name: String) : LuaRValue(name) {
+open class LuaRTable(name: String) : LuaRValue(name) {
     private var list: XValueChildrenList? = null
     private val desc = "table"
     private val unityComName = "components[]"
@@ -60,31 +60,65 @@ class LuaRTable(name: String) : LuaRValue(name) {
         }
     }
 
-    private val evalExpr: String
+    open val evalExpr: String
         get() {
-            var name = name
-            val properties = ArrayList<String>()
+            val properties = ArrayList<LuaRValue>()
             var parent = this.parent
+            var root = this as LuaRValue
             while (parent != null) {
-                val parentName = parent.name
-                properties.add(name)
-                name = parentName
+                properties.add(root)
+                root = parent
                 parent = parent.parent
             }
 
             return buildString {
-                append(name)
-                for (i in properties.indices.reversed()) {
-                    val parentName = properties[i]
-                    when {
-                        parentName == unityComName -> append(":GetComponents(typeof(UnityEngine.Component)):ToTable()")
-                        parentName.startsWith("[") -> append(parentName)
-                        parentName.matches("[0-9]+".toRegex()) -> append("[$parentName]")
-                        else -> append(String.format("[\"%s\"]", parentName))
+                when (root) {
+                    is LuaRFunction -> {
+                        append("debug.getupvalues(${root.name})")
                     }
+                    else -> append(root.name)
+                }
+                for (i in properties.indices.reversed()) {
+                    val node = properties[i]
+                    val nname = node.name
+                    when {
+                        nname == unityComName -> append(":GetComponents(typeof(UnityEngine.Component)):ToTable()")
+                        nname.startsWith("[") -> append(nname)
+                        nname.matches("[0-9]+".toRegex()) -> append("[$nname]")
+                        else -> append(String.format("[\"%s\"]", nname))
+                    }
+                    if (node is LuaRFunction) {
+                        insert(0, "debug.getupvalues(")
+                        append(")")
+                    }
+
                 }
             }
         }
+//    open fun getEvalExpr(): String {
+//        var name = name
+//        val properties = ArrayList<String>()
+//        var parent = this.parent
+//        while (parent != null) {
+//            val parentName = parent.name
+//            properties.add(name)
+//            name = parentName
+//            parent = parent.parent
+//        }
+//
+//        return buildString {
+//            append(name)
+//            for (i in properties.indices.reversed()) {
+//                val parentName = properties[i]
+//                when {
+//                    parentName == unityComName -> append(":GetComponents(typeof(UnityEngine.Component)):ToTable()")
+//                    parentName.startsWith("[") -> append(parentName)
+//                    parentName.matches("[0-9]+".toRegex()) -> append("[$parentName]")
+//                    else -> append(String.format("[\"%s\"]", parentName))
+//                }
+//            }
+//        }
+//    }
 
     override fun computeChildren(node: XCompositeNode) {
         if (list == null) {
