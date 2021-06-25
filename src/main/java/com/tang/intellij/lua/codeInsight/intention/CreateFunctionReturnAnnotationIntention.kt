@@ -25,6 +25,7 @@ import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocTagReturn
 import com.tang.intellij.lua.psi.LuaCommentOwner
 import com.tang.intellij.lua.psi.LuaFuncBodyOwner
+import com.tang.intellij.lua.search.SearchContext
 import org.jetbrains.annotations.Nls
 
 
@@ -44,10 +45,13 @@ class CreateFunctionReturnAnnotationIntention : FunctionIntention() {
 
     override fun invoke(bodyOwner: LuaFuncBodyOwner, editor: Editor) {
         if (bodyOwner is LuaCommentOwner) {
+            var rtype: String = bodyOwner.guessReturnType(SearchContext.get(editor.project!!))?.displayName
             LuaCommentUtil.insertTemplate(bodyOwner, editor) { _, template ->
                 template.addTextSegment("---@return ")
-                val typeSuggest = MacroCallNode(SuggestTypeMacro())
-                template.addVariable("returnType", typeSuggest, TextExpression("table"), false)
+                val typeSuggest = TextExpression(rtype) //MacroCallNode(SuggestTypeMacro())
+                template.addSelectionStartVariable()
+                template.addVariable("returnType", typeSuggest, TextExpression(rtype), false)
+                template.addSelectionEndVariable()
                 template.addEndVariable()
             }
         }
