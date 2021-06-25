@@ -27,21 +27,28 @@ import com.tang.intellij.lua.comment.LuaCommentUtil
 import com.tang.intellij.lua.comment.psi.LuaDocTagClass
 import com.tang.intellij.lua.comment.psi.LuaDocTagReturn
 import com.tang.intellij.lua.psi.*
+import com.tang.intellij.lua.psi.impl.LuaClassMethodDefImpl
+import com.tang.intellij.lua.psi.impl.LuaClassMethodNameImpl
 import com.tang.intellij.lua.search.SearchContext
 import com.tang.intellij.lua.ty.TyClass
+import com.tang.intellij.lua.ty.TyDocTable
+import com.tang.intellij.lua.ty.TySerializedDocTable
 
 class CreateFileFuncReturnAnnoIntention : BaseIntentionAction() {
     override fun getFamilyName() = "Create return annotation 4 class"
     override fun getText() = familyName
 
     override fun isAvailable(project: Project, editor: Editor, psiFile: PsiFile): Boolean {
-        return psiFile.findElementAt(editor.caretModel.offset)?.parent is LuaDocTagClass
+        return psiFile.findElementAt(editor.caretModel.offset)?.parent?.parent is LuaClassMethodNameImpl
     }
 
     @Throws(IncorrectOperationException::class)
     override fun invoke(project: Project, editor: Editor, psiFile: PsiFile) {
-        val cls = (psiFile.findElementAt(editor.caretModel.offset)?.parent as LuaDocTagClass).type
-        cls.processMembers(SearchContext.get(project), {itycls, luaclssmember ->
+        val method = psiFile.findElementAt(editor.caretModel.offset)?.parent?.parent?.parent as LuaClassMethodDefImpl
+        val cls = method.guessClassType(SearchContext.get(project))
+
+//        val cls = (psiFile.findElementAt(editor.caretModel.offset)?.parent as LuaDocTagClass).type
+        cls?.processMembers(SearchContext.get(project), {itycls, luaclssmember ->
             if (luaclssmember is LuaClassMethodDef)
             {
                 if (luaclssmember is LuaCommentOwner) {
@@ -56,7 +63,7 @@ class CreateFileFuncReturnAnnoIntention : BaseIntentionAction() {
     private fun genReturnDoc(bodyOwner: LuaClassMethodDef, editor: Editor)
     {
         var ty = bodyOwner.guessReturnType(SearchContext.get(editor.project!!))
-        if (ty is TyClass)
+        if (ty is TyClass && ty !is TyDocTable && ty !is TySerializedDocTable)
         {
             var rtype: String = ty.displayName
             LuaCommentUtil.insertTemplate(bodyOwner, editor) { _, template ->
