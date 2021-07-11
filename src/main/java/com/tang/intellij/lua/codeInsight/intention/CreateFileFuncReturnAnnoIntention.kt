@@ -30,6 +30,7 @@ import com.tang.intellij.lua.psi.*
 import com.tang.intellij.lua.psi.impl.LuaClassMethodDefImpl
 import com.tang.intellij.lua.psi.impl.LuaClassMethodNameImpl
 import com.tang.intellij.lua.search.SearchContext
+import com.tang.intellij.lua.ty.TyArray
 import com.tang.intellij.lua.ty.TyClass
 import com.tang.intellij.lua.ty.TyDocTable
 import com.tang.intellij.lua.ty.TySerializedDocTable
@@ -63,7 +64,10 @@ class CreateFileFuncReturnAnnoIntention : BaseIntentionAction() {
     private fun genReturnDoc(bodyOwner: LuaClassMethodDef, editor: Editor)
     {
         var ty = bodyOwner.guessReturnType(SearchContext.get(editor.project!!))
-        if (ty is TyClass && ty !is TyDocTable && ty !is TySerializedDocTable)
+        if (
+                ty is TyArray ||
+                (ty is TyClass && ty !is TyDocTable && ty !is TySerializedDocTable)
+        )
         {
             var rtype: String = ty.displayName
             LuaCommentUtil.insertTemplate(bodyOwner, editor) { _, template ->
